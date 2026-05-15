@@ -2538,7 +2538,7 @@ function render() {
 // ============================================================================
 async function init() {
   // Si no se configuró el BACKEND_URL, mostrar pantalla de configuración
-  if (!BACKEND_URL || BACKEND_URL === 'https://script.google.com/macros/s/AKfycbyQn467R8qnZW7RhxBdNoGycqdbbYBnJZtoG4RlVhZI2KSzB_mawORpW3xKXr7a6Msh1A/exec') {
+ if (!BACKEND_URL || BACKEND_URL.includes('PEGAR_AQUI')) {
     showConfigScreen();
     return;
   }
