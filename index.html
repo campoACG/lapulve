@@ -310,28 +310,54 @@ const State = {
 // ============================================================================
 // Pegá acá la URL del Apps Script desplegado como Web App
 // (formato: https://script.google.com/macros/s/AKfycb..../exec)
-  const BACKEND_URL = 'https://script.google.com/macros/s/AKfycbwDNewwiG5e-M4CmZxtmmiGRdxp-Rnv-C6UGAlAls7iph291OJOwjKnNwJhYJJPDit0ow/exec';
+const BACKEND_URL = 'https://script.google.com/macros/s/AKfycbwDNewwiG5e-M4CmZxtmmiGRdxp-Rnv-C6UGAlAls7iph291OJOwjKnNwJhYJJPDit0ow/exec';
 
 // ============================================================================
 // API CLIENT — todas las llamadas al backend pasan por acá
 // ============================================================================
+// JSONP: técnica que evita CORS usando <script> en lugar de fetch
+let _jsonpCounter = 0;
+function jsonpCall(params) {
+  return new Promise((resolve, reject) => {
+    const callbackName = 'lapulve_cb_' + (++_jsonpCounter) + '_' + Date.now();
+    const timeoutId = setTimeout(() => {
+      cleanup();
+      reject(new Error('Timeout: el servidor tardó demasiado en responder'));
+    }, 30000);
+
+    function cleanup() {
+      clearTimeout(timeoutId);
+      delete window[callbackName];
+      if (script.parentNode) script.parentNode.removeChild(script);
+    }
+
+    window[callbackName] = function(response) {
+      cleanup();
+      if (response && response.ok) {
+        resolve(response.data !== undefined ? response.data : response);
+      } else {
+        reject(new Error((response && response.error) || 'Error del backend'));
+      }
+    };
+
+    const urlParams = new URLSearchParams(params);
+    urlParams.set('callback', callbackName);
+    const script = document.createElement('script');
+    script.src = BACKEND_URL + '?' + urlParams.toString();
+    script.onerror = () => {
+      cleanup();
+      reject(new Error('No se pudo conectar al backend (verificar URL y despliegue)'));
+    };
+    document.body.appendChild(script);
+  });
+}
+
 async function apiGet(params = {}) {
-  const url = BACKEND_URL + '?' + new URLSearchParams(params).toString();
-  const resp = await fetch(url);
-  if (!resp.ok) throw new Error('Error HTTP: ' + resp.status);
-  const json = await resp.json();
-  if (!json.ok) throw new Error(json.error || 'Error desconocido del backend');
-  return json.data;
+  return jsonpCall(params);
 }
 
 async function apiPost(body) {
-  // Usamos GET con payload para evitar CORS preflight completamente
-  const url = BACKEND_URL + '?payload=' + encodeURIComponent(JSON.stringify(body));
-  const resp = await fetch(url, { method: 'GET' });
-  if (!resp.ok) throw new Error('Error HTTP: ' + resp.status);
-  const json = await resp.json();
-  if (!json.ok) throw new Error(json.error || 'Error desconocido del backend');
-  return json.data || json;
+  return jsonpCall({ payload: JSON.stringify(body) });
 }
 
 // Carga TODA la data del backend en una sola llamada
@@ -2534,7 +2560,6 @@ function render() {
 // INIT
 // ============================================================================
 async function init() {
-  // Conectar directo, sin validaciones que puedan romperse
   const result = await loadData();
   if (!result.ok) {
     showErrorScreen(result.error);
