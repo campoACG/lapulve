@@ -1,0 +1,2654 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>La Pulve · Gestión</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f1e8;
+    --bg-card: #fffdf7;
+    --ink: #1a1a17;
+    --ink-soft: #4a4a44;
+    --ink-mute: #8a8a82;
+    --line: #d8d3c4;
+    --line-soft: #ebe6d6;
+    --accent: #2d4a2b;
+    --accent-bright: #3f6d3b;
+    --rust: #b8472a;
+    --gold: #c8973e;
+    --positive: #2d6e3e;
+    --negative: #b8472a;
+    --warn: #c8973e;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 14px;
+    line-height: 1.5;
+    overflow: hidden;
+  }
+  .display { font-family: 'Fraunces', serif; letter-spacing: -0.01em; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+
+  .app { display: grid; grid-template-columns: 240px 1fr; height: 100vh; }
+  .sidebar { background: #1c2e1a; color: #e8e4d4; padding: 24px 0; display: flex; flex-direction: column; border-right: 1px solid #0e1a0d; }
+  .brand { padding: 0 24px 24px; border-bottom: 1px solid #2a3f27; }
+  .brand-name { font-family: 'Fraunces', serif; font-size: 22px; font-weight: 600; letter-spacing: -0.01em; }
+  .brand-tag { font-size: 10px; text-transform: uppercase; letter-spacing: 0.15em; color: #8aa386; margin-top: 4px; }
+  .nav { flex: 1; padding: 16px 12px; overflow-y: auto; }
+  .nav-section { font-size: 10px; text-transform: uppercase; letter-spacing: 0.18em; color: #6b8068; padding: 16px 12px 6px; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 6px; cursor: pointer; color: #d4d0c0; font-size: 13px; font-weight: 500; transition: all 0.15s; user-select: none; }
+  .nav-item:hover { background: #2a3f27; color: #fff; }
+  .nav-item.active { background: var(--gold); color: #1c2e1a; }
+  .nav-icon { width: 16px; display: inline-block; text-align: center; font-size: 14px; }
+
+  .user-box { margin: 12px; padding: 12px; background: #2a3f27; border-radius: 8px; display: flex; align-items: center; gap: 10px; }
+  .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--gold); color: #1c2e1a; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; }
+  .user-name { font-size: 12px; font-weight: 600; }
+  .user-role { font-size: 10px; color: #8aa386; }
+
+  .main { overflow-y: auto; background: var(--bg); }
+  .topbar { background: var(--bg-card); border-bottom: 1px solid var(--line); padding: 14px 32px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10; }
+  .breadcrumb { font-size: 13px; color: var(--ink-mute); }
+  .breadcrumb strong { color: var(--ink); font-weight: 600; }
+  .topbar-right { display: flex; align-items: center; gap: 12px; font-size: 12px; color: var(--ink-soft); }
+  .tc-pill { background: #f0ebd9; border: 1px solid var(--line); padding: 5px 10px; border-radius: 999px; font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+  .tc-pill strong { color: var(--accent); }
+
+  .content { padding: 32px; max-width: 1400px; }
+  .page-title { font-family: 'Fraunces', serif; font-size: 32px; font-weight: 600; letter-spacing: -0.02em; margin-bottom: 4px; }
+  .page-sub { color: var(--ink-mute); margin-bottom: 28px; font-size: 14px; }
+
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+
+  .card { background: var(--bg-card); border: 1px solid var(--line); border-radius: 10px; padding: 20px; }
+  .card-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--ink-mute); font-weight: 600; margin-bottom: 8px; }
+  .metric-value { font-family: 'Fraunces', serif; font-size: 28px; font-weight: 600; letter-spacing: -0.02em; color: var(--ink); }
+  .metric-sub { font-size: 12px; color: var(--ink-mute); font-family: 'JetBrains Mono', monospace; margin-top: 4px; }
+  .metric-delta { font-size: 12px; margin-top: 6px; font-weight: 500; }
+  .pos { color: var(--positive); }
+  .neg { color: var(--negative); }
+  .warn-c { color: var(--warn); }
+
+  .section-title { font-family: 'Fraunces', serif; font-size: 20px; font-weight: 600; margin-bottom: 14px; margin-top: 8px; display: flex; justify-content: space-between; align-items: center; }
+
+  table { width: 100%; border-collapse: collapse; background: var(--bg-card); font-size: 13px; }
+  thead { background: #f0ebd9; }
+  th { text-align: left; padding: 12px 14px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-soft); font-weight: 600; border-bottom: 1px solid var(--line); }
+  td { padding: 12px 14px; border-bottom: 1px solid var(--line-soft); }
+  tbody tr:hover { background: #faf6e8; }
+  td.num { font-family: 'JetBrains Mono', monospace; text-align: right; font-size: 12px; }
+  th.num { text-align: right; }
+
+  .tag { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+  .tag-green { background: #dde8db; color: #2d4a2b; }
+  .tag-gold  { background: #f4e6c5; color: #7a5a16; }
+  .tag-rust  { background: #f4dcd4; color: #8a3320; }
+  .tag-blue  { background: #d8e2ec; color: #2c4660; }
+  .tag-grey  { background: #e8e4d4; color: #5a5a52; }
+
+  .table-card { background: var(--bg-card); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+
+  .btn { background: var(--accent); color: #fff; border: none; padding: 9px 16px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit; }
+  .btn:hover { background: var(--accent-bright); }
+  .btn-ghost { background: transparent; color: var(--accent); border: 1px solid var(--line); }
+  .btn-ghost:hover { background: var(--line-soft); }
+  .btn-sm { padding: 5px 10px; font-size: 11px; border-radius: 4px; }
+  .btn-danger { background: var(--rust); color: #fff; }
+  .btn-danger:hover { background: #9a3622; }
+
+  .iva-card { background: linear-gradient(135deg, #1c2e1a 0%, #2d4a2b 100%); color: #fff; border: none; position: relative; overflow: hidden; }
+  .iva-card::after { content: ''; position: absolute; right: -20px; top: -20px; width: 140px; height: 140px; border: 1px solid rgba(255,255,255,0.08); border-radius: 50%; }
+  .iva-card .card-title { color: #c5d2c3; }
+  .iva-card .metric-value { color: #fff; }
+  .iva-card .metric-sub { color: #a8baa6; }
+
+  .util-card { background: linear-gradient(135deg, #c8973e 0%, #b8472a 100%); color: #fff; border: none; position: relative; overflow: hidden; }
+  .util-card .card-title { color: #f0e2c0; }
+  .util-card .metric-value { color: #fff; }
+  .util-card .metric-sub { color: #f0e2c0; }
+
+  .drawer-bg { position: fixed; inset: 0; background: rgba(28, 46, 26, 0.4); display: none; align-items: center; justify-content: flex-end; z-index: 100; }
+  .drawer-bg.show { display: flex; }
+  .drawer { background: var(--bg-card); width: 480px; height: 100vh; overflow-y: auto; padding: 28px; }
+  .drawer h3 { font-family: 'Fraunces', serif; font-size: 22px; font-weight: 600; margin-bottom: 18px; }
+  .form-group { margin-bottom: 14px; }
+  .form-group label { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-soft); font-weight: 600; margin-bottom: 5px; }
+  .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 9px 11px; border: 1px solid var(--line); border-radius: 6px; font-family: inherit; font-size: 13px; background: var(--bg); }
+  .form-group input:focus, .form-group select:focus { outline: 2px solid var(--accent); outline-offset: -1px; border-color: transparent; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .drawer-actions { display: flex; gap: 10px; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--line-soft); }
+
+  .tabs { display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 1px solid var(--line); }
+  .tab { padding: 10px 16px; cursor: pointer; font-size: 13px; font-weight: 500; color: var(--ink-mute); border-bottom: 2px solid transparent; margin-bottom: -1px; user-select: none; }
+  .tab:hover { color: var(--ink); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  .share-row { display: flex; align-items: center; gap: 14px; margin-bottom: 10px; font-size: 13px; }
+  .share-bar { flex: 1; height: 6px; background: var(--line-soft); border-radius: 3px; overflow: hidden; }
+  .share-fill { height: 100%; background: var(--accent); }
+  .share-fill.gold { background: var(--gold); }
+
+  .page { display: none; }
+  .page.active { display: block; }
+
+  .row-between { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .filter-bar { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+  .filter-bar select, .filter-bar input { padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; font-size: 12px; background: var(--bg-card); font-family: inherit; }
+
+  .empty-msg { padding: 36px; text-align: center; color: var(--ink-mute); font-style: italic; }
+  .mini-list { list-style: none; }
+  .mini-list li { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--line-soft); font-size: 13px; }
+  .mini-list li:last-child { border-bottom: none; }
+  .mini-list .mini-meta { color: var(--ink-mute); font-size: 11px; }
+
+  .actions-cell { display: flex; gap: 4px; }
+  .icon-btn { background: transparent; border: 1px solid var(--line); padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 11px; color: var(--ink-soft); font-family: inherit; }
+  .icon-btn:hover { background: var(--line-soft); color: var(--ink); }
+  .icon-btn.del:hover { background: #f4dcd4; color: var(--rust); border-color: var(--rust); }
+
+  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--accent); color: #fff; padding: 12px 18px; border-radius: 8px; font-size: 13px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 200; opacity: 0; transition: opacity 0.2s; pointer-events: none; }
+  .toast.show { opacity: 1; }
+
+  .loading-screen { position: fixed; inset: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; }
+  .loading-screen .brand-name { font-size: 32px; }
+  .spinner { width: 32px; height: 32px; border: 3px solid var(--line); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; margin-top: 20px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .mig-card {
+    max-width: 580px;
+    width: 100%;
+    background: var(--bg-card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 36px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+  }
+
+  .info-box { font-size: 12px; color: var(--ink-mute); padding: 10px 12px; background: var(--line-soft); border-radius: 6px; margin-bottom: 12px; }
+
+  #migration { display: none; }
+  .mig-card {
+    background: var(--bg-card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 36px;
+    max-width: 520px;
+    width: 100%;
+    box-shadow: 0 8px 32px rgba(28, 46, 26, 0.12);
+  }
+
+  @media (max-width: 768px) {
+    .app { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+    .grid-4 { grid-template-columns: 1fr 1fr; }
+    .grid-3, .grid-2 { grid-template-columns: 1fr; }
+    .content { padding: 16px; }
+    .topbar { padding: 12px 16px; }
+    .drawer { width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<div class="loading-screen" id="loading">
+  <div class="brand-name display" style="color: var(--accent);">La Pulve</div>
+  <div class="spinner"></div>
+  <div style="margin-top: 14px; font-size: 12px; color: var(--ink-mute);">Cargando tus datos...</div>
+</div>
+
+<div id="migration" style="display:none; position: fixed; inset: 0; background: var(--bg); align-items: center; justify-content: center; z-index: 999; padding: 20px;">
+  <!-- Renderizado dinámico desde showMigrationScreen() -->
+</div>
+
+<div class="app" id="appRoot" style="display:none;">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-name">La Pulve</div>
+      <div class="brand-tag" id="brandTag">Gestión · Soc. Bianco-Potetti</div>
+    </div>
+    <nav class="nav" id="nav">
+      <div class="nav-section">Operación</div>
+      <div class="nav-item active" data-page="dashboard"><span class="nav-icon">◐</span> Dashboard</div>
+      <div class="nav-item" data-page="trabajos"><span class="nav-icon">◇</span> Ingresos</div>
+      <div class="nav-item" data-page="facturacion"><span class="nav-icon">▤</span> Facturación</div>
+      <div class="nav-item" data-page="gastos"><span class="nav-icon">▦</span> Gastos</div>
+      <div class="nav-section">Tesorería</div>
+      <div class="nav-item" data-page="cheques"><span class="nav-icon">▥</span> Cheques y Transf.</div>
+      <div class="nav-item" data-page="financiacion"><span class="nav-icon">⬢</span> Financiación máquina</div>
+      <div class="nav-section">Personas</div>
+      <div class="nav-item" data-page="clientes"><span class="nav-icon">◯</span> Clientes</div>
+      <div class="nav-item" data-page="proveedores"><span class="nav-icon">◉</span> Proveedores</div>
+      <div class="nav-item" data-page="operario"><span class="nav-icon">◎</span> Operario</div>
+      <div class="nav-item" data-page="socios"><span class="nav-icon">⬣</span> Socios</div>
+      <div class="nav-section">Análisis</div>
+      <div class="nav-item" data-page="reportes"><span class="nav-icon">▭</span> Reportes</div>
+      <div class="nav-item" data-page="config"><span class="nav-icon">⚙</span> Configuración</div>
+    </nav>
+    <div class="user-box">
+      <div class="user-avatar" id="userAvatar">B</div>
+      <div>
+        <div class="user-name" id="userName">Bianco</div>
+        <div class="user-role" id="userRole">Socio · 70,20%</div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div class="breadcrumb">La Pulve <span style="margin: 0 8px;">/</span> <strong id="bc">Dashboard</strong></div>
+      <div class="topbar-right">
+        <div class="tc-pill">TC USD <strong id="tcDisplay">$1.495</strong></div>
+        <div>Ejercicio <strong style="color: var(--ink);" id="ejercicioDisplay">2025-2026</strong></div>
+      </div>
+    </div>
+    <div class="content" id="pageContainer">
+      <!-- Las páginas se renderizan dinámicamente -->
+    </div>
+  </main>
+</div>
+
+<!-- DRAWER genérico -->
+<div class="drawer-bg" id="drawerBg" onclick="if(event.target.id==='drawerBg') closeDrawer()">
+  <div class="drawer" id="drawerContent"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================================
+// ESTADO Y PERSISTENCIA
+// ============================================================================
+const State = {
+  config: {
+    sociedadNombre: 'La Pulve · Soc. Bianco-Potetti',
+    socioA: 'Bianco',
+    socioB: 'Potetti',
+    pctA: 70.1977,
+    pctB: 29.8023,
+    cuit: '',
+    inicioEjercicio: '2025-11-01',
+    tcActual: 1495,
+    precioHaActual: 8500,
+    ivaPct: 10.5,
+    categoriasGasto: ['Combustible','Mantenimiento','Repuestos','Servicios','Maquinaria','Impuestos','Otros'],
+    retencionGanancias: 2,
+    retencionIVA: 10.5,
+    retencionIIBB: 1.5
+  },
+  // NUEVO: array de operarios. Cada operario tiene su esquema de pago.
+  // esquema: 'has' (sueldo fijo + % sobre has) | 'dias' (sueldo fijo + monto/día × días)
+  operarios: [],
+  trabajos: [],
+  facturas: [],
+  gastos: [],
+  cheques: [],
+  transferencias: [],
+  clientes: [],
+  proveedores: [],
+  // pagos con operarioId
+  pagosOperarios: [],
+  // días trabajados por operario por mes (solo aplica a operarios esquema='dias')
+  diasTrabajados: [], // {id, operarioId, mes (YYYY-MM), dias}
+  retirosSocios: [],
+  cuotasMaquina: [],
+  preciosHistorico: [],
+  retenciones: []
+};
+
+// ============================================================================
+// CONFIGURACIÓN DEL BACKEND (Google Apps Script)
+// ============================================================================
+// Pegá acá la URL del Apps Script desplegado como Web App
+// (formato: https://script.google.com/macros/s/AKfycb..../exec)
+const BACKEND_URL = 'https://script.google.com/macros/s/AKfycbwDNewwiG5e-M4CmZxtmmiGRdxp-Rnv-C6UGAlAls7iph291OJOwjKnNwJhYJJPDit0ow/exec';
+
+// ============================================================================
+// API CLIENT — todas las llamadas al backend pasan por acá
+// ============================================================================
+// JSONP: técnica que evita CORS usando <script> en lugar de fetch
+let _jsonpCounter = 0;
+function jsonpCall(params) {
+  return new Promise((resolve, reject) => {
+    const callbackName = 'lapulve_cb_' + (++_jsonpCounter) + '_' + Date.now();
+    const timeoutId = setTimeout(() => {
+      cleanup();
+      reject(new Error('Timeout: el servidor tardó demasiado en responder'));
+    }, 30000);
+
+    function cleanup() {
+      clearTimeout(timeoutId);
+      delete window[callbackName];
+      if (script.parentNode) script.parentNode.removeChild(script);
+    }
+
+    window[callbackName] = function(response) {
+      cleanup();
+      if (response && response.ok) {
+        resolve(response.data !== undefined ? response.data : response);
+      } else {
+        reject(new Error((response && response.error) || 'Error del backend'));
+      }
+    };
+
+    const urlParams = new URLSearchParams(params);
+    urlParams.set('callback', callbackName);
+    const script = document.createElement('script');
+    script.src = BACKEND_URL + '?' + urlParams.toString();
+    script.onerror = () => {
+      cleanup();
+      reject(new Error('No se pudo conectar al backend (verificar URL y despliegue)'));
+    };
+    document.body.appendChild(script);
+  });
+}
+
+async function apiGet(params = {}) {
+  return jsonpCall(params);
+}
+
+async function apiPost(body) {
+  return jsonpCall({ payload: JSON.stringify(body) });
+}
+
+// Carga TODA la data del backend en una sola llamada
+async function loadData() {
+  try {
+    const data = await apiGet({ action: 'getAll' });
+    // Volcamos los arrays al State
+    ['operarios','trabajos','facturas','gastos','cheques','transferencias',
+     'clientes','proveedores','pagosOperarios','diasTrabajados','retirosSocios',
+     'cuotasMaquina','preciosHistorico'].forEach(k => {
+      if (Array.isArray(data[k])) State[k] = data[k];
+    });
+    // Volcamos config (que viene como objeto plano del backend)
+    if (data.config && typeof data.config === 'object') {
+      Object.assign(State.config, data.config);
+    }
+    State._userEmail = data.user || '';
+    return { ok: true };
+  } catch (e) {
+    console.error('loadData error:', e);
+    return { ok: false, error: String(e) };
+  }
+}
+
+// Guardar un item (crea o actualiza)
+async function apiSave(entity, data) {
+  try {
+    const saved = await apiPost({ action: 'save', entity, data });
+    return saved;
+  } catch (e) {
+    showToast('Error al guardar: ' + e.message, true);
+    throw e;
+  }
+}
+
+// Borrar un item
+async function apiDelete(entity, id) {
+  try {
+    await apiPost({ action: 'delete', entity, id });
+  } catch (e) {
+    showToast('Error al borrar: ' + e.message, true);
+    throw e;
+  }
+}
+
+// Guardar config completa (objeto key/value)
+async function apiSaveConfig(configObj) {
+  try {
+    await apiPost({ action: 'saveConfig', data: configObj });
+  } catch (e) {
+    showToast('Error al guardar config: ' + e.message, true);
+    throw e;
+  }
+}
+
+// Función mantenida por compatibilidad con código viejo, ahora sin uso real
+async function saveData() {
+  // Esta función ya no se usa porque cada item se guarda individualmente.
+  // Se mantiene por compatibilidad con código que la llame.
+  return true;
+}
+
+function showToast(msg, isError) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.background = isError ? 'var(--rust)' : 'var(--accent)';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+function uid(prefix='id') {
+  return prefix + '_' + Date.now() + '_' + Math.floor(Math.random()*9999);
+}
+
+
+// ============================================================================
+// HELPERS DE FORMATO
+// ============================================================================
+function fmtARS(n, opts = {}) {
+  if (n === null || n === undefined || isNaN(n)) return '—';
+  const abs = Math.abs(n);
+  if (opts.compact && abs >= 1000000) return (n < 0 ? '−' : '') + '$' + (abs/1000000).toFixed(2).replace('.',',') + ' M';
+  if (opts.compact && abs >= 1000) return (n < 0 ? '−' : '') + '$' + (abs/1000).toFixed(0) + ' k';
+  return (n < 0 ? '−' : '') + '$' + Math.round(abs).toLocaleString('es-AR');
+}
+
+function fmtUSD(n, opts={}) {
+  if (n === null || n === undefined || isNaN(n)) return '—';
+  if (opts.compact && Math.abs(n) >= 1000) return 'USD ' + (n/1000).toFixed(1).replace('.',',') + ' k';
+  return 'USD ' + Math.round(n).toLocaleString('es-AR');
+}
+
+function fmtNum(n) {
+  if (n === null || n === undefined || isNaN(n)) return '—';
+  return Math.round(n).toLocaleString('es-AR');
+}
+
+function fmtFecha(s) {
+  if (!s) return '—';
+  const [y,m,d] = s.split('-');
+  return `${d}/${m}/${y.slice(2)}`;
+}
+
+function findById(arr, id) { return arr.find(x => x.id === id); }
+function clienteName(id) { const c = findById(State.clientes, id); return c ? c.razonSocial : '—'; }
+function proveedorName(id) { const p = findById(State.proveedores, id); return p ? p.razonSocial : '—'; }
+
+function mesYY(fecha) {
+  if (!fecha) return '';
+  return fecha.slice(0,7); // YYYY-MM
+}
+
+// ============================================================================
+// CÁLCULOS DE NEGOCIO
+// ============================================================================
+const Calc = {
+  trabajosFiltro(filtros = {}) {
+    return State.trabajos.filter(t => {
+      if (filtros.mes && mesYY(t.fecha) !== filtros.mes) return false;
+      if (filtros.clienteId && t.clienteId !== filtros.clienteId) return false;
+      return true;
+    });
+  },
+
+  totalIngresosNetos(mes) {
+    return State.facturas
+      .filter(f => !mes || mesYY(f.fecha) === mes)
+      .reduce((s,f) => s + (f.neto || 0), 0);
+  },
+
+  totalIVADebito(mes) {
+    return State.facturas
+      .filter(f => !mes || mesYY(f.fecha) === mes)
+      .reduce((s,f) => s + (f.iva || 0), 0);
+  },
+
+  totalGastosNetos(mes, opts = {}) {
+    return State.gastos
+      .filter(g => !mes || mesYY(g.fecha) === mes)
+      .filter(g => !opts.excluirCategoria || g.categoria !== opts.excluirCategoria)
+      .reduce((s,g) => s + (g.neto || 0), 0);
+  },
+
+  totalIVACredito(mes) {
+    return State.gastos
+      .filter(g => !mes || mesYY(g.fecha) === mes)
+      .reduce((s,g) => s + (g.iva || 0), 0);
+  },
+
+  posicionIVA(mes) {
+    return this.totalIVACredito(mes) - this.totalIVADebito(mes);
+  },
+
+  totalHas(mes) {
+    return State.trabajos
+      .filter(t => !mes || mesYY(t.fecha) === mes)
+      .reduce((s,t) => s + (t.has || 0), 0);
+  },
+
+  // Liquidación operario por mes (recibe operarioId)
+  liquidacionMes(operarioId, mes) {
+    const op = findById(State.operarios, operarioId);
+    if (!op) return null;
+    const sueldoFijo = op.sueldoFijo || 0;
+    let comision = 0;
+    let detalle = '';
+    let has = 0, dias = 0, generado = 0;
+
+    if (op.esquema === 'has') {
+      const trabsMes = State.trabajos.filter(t => mesYY(t.fecha) === mes);
+      has = trabsMes.reduce((s,t) => s + (t.has||0), 0);
+      generado = trabsMes.reduce((s,t) => s + (t.neto||0), 0);
+      comision = generado * ((op.comisionPct||0) / 100);
+      detalle = `${has} ha × $${(op.comisionPct||0)}%`;
+    } else if (op.esquema === 'dias') {
+      const dt = State.diasTrabajados.find(d => d.operarioId === operarioId && d.mes === mes);
+      dias = dt ? dt.dias : 0;
+      comision = dias * (op.montoPorDia || 0);
+      detalle = `${dias} días × ${fmtARS(op.montoPorDia||0)}`;
+    }
+
+    const totalMes = sueldoFijo + comision;
+    const pagado = State.pagosOperarios
+      .filter(p => p.operarioId === operarioId && p.mes === mes)
+      .reduce((s,p) => s + (p.monto||0), 0);
+    return { operarioId, operarioNombre: op.nombre, esquema: op.esquema, mes, has, dias, generado, sueldoFijo, comision, totalMes, pagado, saldo: pagado - totalMes, detalle };
+  },
+
+  // Todas las liquidaciones de todos los operarios
+  liquidacionTotal(operarioId) {
+    const operarios = operarioId ? [findById(State.operarios, operarioId)].filter(Boolean) : State.operarios;
+    const meses = new Set();
+    State.trabajos.forEach(t => meses.add(mesYY(t.fecha)));
+    State.pagosOperarios.forEach(p => meses.add(p.mes));
+    State.diasTrabajados.forEach(d => meses.add(d.mes));
+    const result = [];
+    operarios.forEach(op => {
+      Array.from(meses).sort().forEach(m => {
+        const liq = this.liquidacionMes(op.id, m);
+        if (liq) result.push(liq);
+      });
+    });
+    return result;
+  },
+
+  // Saldo total de un operario (suma de todos los meses)
+  saldoOperario(operarioId) {
+    return this.liquidacionTotal(operarioId).reduce((s,l) => s + l.saldo, 0);
+  },
+
+  // Total acumulado pagado a operarios en el ejercicio (para utilidad)
+  totalSueldosOperarios() {
+    const liq = this.liquidacionTotal();
+    return liq.reduce((s,l) => s + l.totalMes, 0);
+  },
+
+  utilidadEjercicio() {
+    const ingNetos = this.totalIngresosNetos();
+    // gastos netos sin maquinaria (la compra es activo, no gasto)
+    const gastosNetos = State.gastos
+      .filter(g => g.categoria !== 'Maquinaria')
+      .reduce((s,g) => s + (g.neto||0), 0);
+
+    // sueldos y comisiones de TODOS los operarios (acumulado)
+    const totalOperario = this.totalSueldosOperarios();
+
+    const utilidad = ingNetos - gastosNetos - totalOperario;
+    return {
+      ingresosNetos: ingNetos,
+      gastosNetos,
+      totalOperario,
+      utilidad,
+      utilidadA: utilidad * (State.config.pctA / 100),
+      utilidadB: utilidad * (State.config.pctB / 100)
+    };
+  },
+
+  saldoCliente(clienteId) {
+    const facs = State.facturas.filter(f => f.clienteId === clienteId);
+    const pendientes = facs.filter(f => f.estado === 'pendiente').reduce((s,f) => s + (f.total||0), 0);
+    const facturado = facs.reduce((s,f) => s + (f.total||0), 0);
+    const has = State.trabajos.filter(t => t.clienteId === clienteId).reduce((s,t) => s + (t.has||0), 0);
+    return { facturado, cobrado: facturado - pendientes, pendiente: pendientes, has };
+  },
+
+  // Totales de retenciones por tipo (sumando todas las facturas del ejercicio)
+  totalRetGanancias(mes) {
+    return State.facturas
+      .filter(f => !mes || mesYY(f.fecha) === mes)
+      .reduce((s,f) => s + (f.retGanancias||0), 0);
+  },
+  totalRetIVA(mes) {
+    return State.facturas
+      .filter(f => !mes || mesYY(f.fecha) === mes)
+      .reduce((s,f) => s + (f.retIVA||0), 0);
+  },
+  totalRetIIBB(mes) {
+    return State.facturas
+      .filter(f => !mes || mesYY(f.fecha) === mes)
+      .reduce((s,f) => s + (f.retIIBB||0), 0);
+  },
+  totalRetenciones(mes) {
+    return this.totalRetGanancias(mes) + this.totalRetIVA(mes) + this.totalRetIIBB(mes);
+  },
+
+  saldoProveedor(provId) {
+    const gas = State.gastos.filter(g => g.proveedorId === provId);
+    const total = gas.reduce((s,g) => s + (g.total||0), 0);
+    return { total, items: gas.length };
+  },
+
+  retirosSocio(socio) {
+    return State.retirosSocios.filter(r => r.socio === socio).reduce((s,r) => s + (r.monto||0), 0);
+  }
+};
+
+// ============================================================================
+// RENDER ENGINE — cada página es una función que retorna HTML
+// ============================================================================
+const Pages = {
+  dashboard() {
+    const u = Calc.utilidadEjercicio();
+    const ivaPos = Calc.posicionIVA();
+    const has = Calc.totalHas();
+    // Saldos de operarios (suma todos)
+    const saldoOp = State.operarios.reduce((s,op) => s + Calc.saldoOperario(op.id), 0);
+    const operariosActivos = State.operarios.filter(o => o.activo);
+
+    const cuotasPend = State.cuotasMaquina.filter(c => c.estado === 'pendiente');
+    const cuotaProx = cuotasPend[0];
+    const usdPendiente = cuotasPend.reduce((s,c) => s + c.totalUSD, 0);
+
+    // facturas pendientes
+    const facPend = State.facturas.filter(f => f.estado === 'pendiente');
+    const facPendTotal = facPend.reduce((s,f) => s + f.total, 0);
+
+    // retenciones del ejercicio
+    const retGan = Calc.totalRetGanancias();
+    const retIVAr = Calc.totalRetIVA();
+    const retIIBB = Calc.totalRetIIBB();
+
+    return `
+      <h1 class="page-title">Panorama general</h1>
+      <p class="page-sub">Foto del negocio al día de hoy</p>
+
+      <div class="grid-4">
+        <div class="card iva-card">
+          <div class="card-title">Posición IVA · Ejercicio</div>
+          <div class="metric-value">${fmtARS(ivaPos, {compact:true})}</div>
+          <div class="metric-sub">Crédito ${fmtARS(Calc.totalIVACredito(),{compact:true})} − Débito ${fmtARS(Calc.totalIVADebito(),{compact:true})}</div>
+          <div class="metric-delta" style="color: #f0e2c0;">${ivaPos < 0 ? 'A favor (saldo a favor)' : 'A pagar (a fisco)'}</div>
+        </div>
+        <div class="card util-card">
+          <div class="card-title">Utilidad ejercicio</div>
+          <div class="metric-value">${fmtARS(u.utilidad,{compact:true})}</div>
+          <div class="metric-sub">${fmtUSD(u.utilidad / State.config.tcActual)} al TC actual</div>
+          <div class="metric-delta">+ Ingresos − Gastos − Operario</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Ingresos netos</div>
+          <div class="metric-value">${fmtARS(u.ingresosNetos,{compact:true})}</div>
+          <div class="metric-sub">Sin IVA · ${State.facturas.length} facturas</div>
+          <div class="metric-delta pos">${fmtUSD(u.ingresosNetos / State.config.tcActual)}</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Gastos netos</div>
+          <div class="metric-value">${fmtARS(u.gastosNetos,{compact:true})}</div>
+          <div class="metric-sub">Sin IVA · sin maquinaria</div>
+          <div class="metric-delta neg">${fmtUSD(u.gastosNetos / State.config.tcActual)}</div>
+        </div>
+      </div>
+
+      <div class="grid-3">
+        <div class="card">
+          <div class="card-title">Hectáreas trabajadas</div>
+          <div class="metric-value">${fmtNum(has)} ha</div>
+          <div class="metric-sub">Ejercicio acumulado</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Saldo operario${operariosActivos.length > 1 ? 's' : ''}</div>
+          <div class="metric-value ${saldoOp >= 0 ? 'pos':'neg'}" style="color: ${saldoOp >= 0 ? 'var(--positive)':'var(--negative)'};">
+            ${saldoOp >= 0 ? '+' : ''}${fmtARS(saldoOp)}
+          </div>
+          <div class="metric-sub">${operariosActivos.map(o => o.nombre).join(', ') || 'Sin operarios'}</div>
+          <div class="metric-delta">${saldoOp >= 0 ? 'Sobrepago a favor' : 'Pendiente de pago'}</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Cuotas pendientes Caimán</div>
+          <div class="metric-value">${fmtUSD(usdPendiente)}</div>
+          <div class="metric-sub">${cuotasPend.length} cuotas restantes</div>
+          <div class="metric-delta warn-c">${cuotaProx ? `Próx: ${fmtFecha(cuotaProx.vencimiento)} · ${fmtUSD(cuotaProx.totalUSD)}` : 'Todas pagadas'}</div>
+        </div>
+      </div>
+
+      <!-- TARJETAS DE RETENCIONES DISCRIMINADAS -->
+      <div class="card" style="margin-bottom: 24px; background: linear-gradient(135deg, #f0ebd9 0%, #fffdf7 100%); border-color: var(--gold);">
+        <div class="row-between" style="margin-bottom: 14px;">
+          <div class="section-title" style="margin: 0;">Retenciones recibidas (a computar)</div>
+          <a class="mono" style="font-size: 11px; color: var(--accent); cursor:pointer;" onclick="goTo('reportes')">Ver detalle →</a>
+        </div>
+        <div class="grid-3" style="margin-bottom: 0;">
+          <div style="padding: 14px; background: var(--bg-card); border-radius: 8px; border: 1px solid var(--line);">
+            <div class="card-title">Ganancias</div>
+            <div class="metric-value" style="font-size: 22px;">${fmtARS(retGan, {compact:true})}</div>
+            <div class="metric-sub">A computar en DDJJ Ganancias</div>
+          </div>
+          <div style="padding: 14px; background: var(--bg-card); border-radius: 8px; border: 1px solid var(--line);">
+            <div class="card-title">IVA</div>
+            <div class="metric-value" style="font-size: 22px;">${fmtARS(retIVAr, {compact:true})}</div>
+            <div class="metric-sub">A computar en DDJJ IVA</div>
+          </div>
+          <div style="padding: 14px; background: var(--bg-card); border-radius: 8px; border: 1px solid var(--line);">
+            <div class="card-title">IIBB</div>
+            <div class="metric-value" style="font-size: 22px;">${fmtARS(retIIBB, {compact:true})}</div>
+            <div class="metric-sub">A computar en DDJJ IIBB</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="row-between" style="margin-bottom: 12px;">
+            <div class="card-title" style="margin: 0;">Cobranzas pendientes</div>
+            <a class="mono" style="font-size: 11px; color: var(--accent); cursor:pointer;" onclick="goTo('facturacion')">Ver todo →</a>
+          </div>
+          ${facPend.length === 0 ? '<div class="empty-msg">Sin facturas pendientes 🎉</div>' :
+            '<ul class="mini-list">' + facPend.slice(0,5).map(f => `
+              <li>
+                <div>
+                  <div>${clienteName(f.clienteId)}</div>
+                  <div class="mini-meta">Fact. ${f.numero} · ${fmtFecha(f.fecha)}</div>
+                </div>
+                <div class="mono"><strong>${fmtARS(f.total)}</strong></div>
+              </li>
+            `).join('') + '</ul>' +
+            (facPend.length > 0 ? `<div style="margin-top:10px; padding-top:10px; border-top:1px solid var(--line-soft); font-size: 12px; display: flex; justify-content: space-between;"><strong>Total a cobrar</strong><strong class="mono">${fmtARS(facPendTotal)}</strong></div>` : '')
+          }
+        </div>
+
+        <div class="card">
+          <div class="row-between" style="margin-bottom: 12px;">
+            <div class="card-title" style="margin: 0;">Próximas obligaciones</div>
+          </div>
+          <ul class="mini-list">
+            ${cuotaProx ? `
+              <li>
+                <div>
+                  <div>Cuota ${cuotaProx.numero} · Caimán</div>
+                  <div class="mini-meta">${fmtFecha(cuotaProx.vencimiento)}</div>
+                </div>
+                <div class="mono warn-c"><strong>${fmtUSD(cuotaProx.totalUSD)}</strong></div>
+              </li>` : ''}
+            ${operariosActivos.map(op => `
+              <li>
+                <div>
+                  <div>Sueldo ${op.nombre}</div>
+                  <div class="mini-meta">${op.esquema === 'has' ? `Fijo + ${op.comisionPct}% comisión` : `Fijo + ${fmtARS(op.montoPorDia)}/día`}</div>
+                </div>
+                <div class="mono"><strong>${fmtARS(op.sueldoFijo)}+</strong></div>
+              </li>
+            `).join('')}
+          </ul>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top: 8px;">
+        <div class="row-between" style="margin-bottom: 14px;">
+          <div class="section-title" style="margin: 0;">Distribución de utilidad</div>
+          <span class="tag tag-green">Ejercicio en curso</span>
+        </div>
+        <div class="share-row">
+          <div style="width: 110px;"><strong>${State.config.socioA}</strong> <span style="color: var(--ink-mute);">${State.config.pctA.toFixed(2)}%</span></div>
+          <div class="share-bar"><div class="share-fill" style="width: ${State.config.pctA}%;"></div></div>
+          <div class="mono" style="width: 130px; text-align: right;"><strong>${fmtARS(u.utilidadA)}</strong></div>
+        </div>
+        <div class="share-row">
+          <div style="width: 110px;"><strong>${State.config.socioB}</strong> <span style="color: var(--ink-mute);">${State.config.pctB.toFixed(2)}%</span></div>
+          <div class="share-bar"><div class="share-fill gold" style="width: ${State.config.pctB}%;"></div></div>
+          <div class="mono" style="width: 130px; text-align: right;"><strong>${fmtARS(u.utilidadB)}</strong></div>
+        </div>
+        <div style="margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line-soft); font-size: 12px; color: var(--ink-mute);">
+          Calculado sobre utilidad neta de ${fmtARS(u.utilidad)} (ingresos − gastos − operario).
+          Editable desde <a style="color: var(--accent); cursor:pointer;" onclick="goTo('socios')">Socios</a>.
+        </div>
+      </div>
+    `;
+  },
+
+  trabajos() {
+    const trabs = [...State.trabajos].sort((a,b) => b.fecha.localeCompare(a.fecha));
+    const has = Calc.totalHas();
+    const sinFac = trabs.filter(t => !t.facturaId).reduce((s,t) => s + t.has, 0);
+    const hasMes = Calc.totalHas(mesYY(new Date().toISOString().slice(0,10)));
+
+    return `
+      <div class="row-between" style="margin-bottom: 14px;">
+        <div>
+          <h1 class="page-title">Ingresos</h1>
+          <p class="page-sub">Cada labor de pulverización con hectáreas, precio y vinculación a factura</p>
+        </div>
+        <button class="btn" onclick="openForm('trabajo')">+ Cargar ingreso</button>
+      </div>
+
+      <div class="grid-4">
+        <div class="card"><div class="card-title">Has este mes</div><div class="metric-value">${fmtNum(hasMes)} ha</div></div>
+        <div class="card"><div class="card-title">Has ejercicio</div><div class="metric-value">${fmtNum(has)} ha</div><div class="metric-sub">Acumulado</div></div>
+        <div class="card"><div class="card-title">Precio actual / ha</div><div class="metric-value">${fmtARS(State.config.precioHaActual)}</div><div class="metric-sub">${fmtUSD(State.config.precioHaActual / State.config.tcActual)} al TC</div></div>
+        <div class="card"><div class="card-title">Sin facturar</div><div class="metric-value warn-c" style="color: var(--warn);">${fmtNum(sinFac)} ha</div><div class="metric-sub">Pendiente emitir</div></div>
+      </div>
+
+      <div class="table-card">
+        <table>
+          <thead>
+            <tr>
+              <th>Fecha</th><th>Cliente</th><th class="num">Has</th><th class="num">$/ha</th>
+              <th class="num">Neto</th><th class="num">IVA</th><th class="num">Total</th>
+              <th>Factura</th><th></th>
+            </tr>
+          </thead>
+          <tbody>
+            ${trabs.length === 0 ? '<tr><td colspan="9" class="empty-msg">Sin ingresos cargados aún. Hacé clic en "+ Cargar ingreso" para empezar.</td></tr>' :
+              trabs.map(t => {
+                const fac = t.facturaId ? findById(State.facturas, t.facturaId) : null;
+                const estado = fac ? (fac.estado === 'cobrada' ? '<span class="tag tag-green">Cobrado</span>' : '<span class="tag tag-gold">Pendiente cobro</span>') : '<span class="tag tag-rust">Sin factura</span>';
+                return `<tr>
+                  <td>${fmtFecha(t.fecha)}</td>
+                  <td>${clienteName(t.clienteId)}</td>
+                  <td class="num">${fmtNum(t.has)}</td>
+                  <td class="num">${fmtARS(t.precioHa)}</td>
+                  <td class="num">${fmtARS(t.neto)}</td>
+                  <td class="num">${fmtARS(t.iva)}</td>
+                  <td class="num"><strong>${fmtARS(t.total)}</strong></td>
+                  <td>${fac ? `Fact. ${fac.numero}` : estado}</td>
+                  <td>
+                    <div class="actions-cell">
+                      <button class="icon-btn" onclick="openForm('trabajo','${t.id}')">Editar</button>
+                      <button class="icon-btn del" onclick="deleteItem('trabajos','${t.id}')">Borrar</button>
+                    </div>
+                  </td>
+                </tr>`;
+              }).join('')
+            }
+          </tbody>
+        </table>
+      </div>
+    `;
+  },
+
+  facturacion() {
+    const facs = [...State.facturas].sort((a,b) => b.fecha.localeCompare(a.fecha));
+    const totIVA = Calc.totalIVADebito();
+    const totFac = facs.reduce((s,f) => s + f.total, 0);
+    const totRetGan = Calc.totalRetGanancias();
+    const totRetIVA = Calc.totalRetIVA();
+    const totRetIIBB = Calc.totalRetIIBB();
+    const totRet = totRetGan + totRetIVA + totRetIIBB;
+    const pendiente = facs.filter(f => f.estado === 'pendiente').reduce((s,f) => s + f.total, 0);
+
+    return `
+      <div class="row-between" style="margin-bottom: 14px;">
+        <div>
+          <h1 class="page-title">Facturación emitida</h1>
+          <p class="page-sub">Registro de facturas emitidas con discriminación de retenciones</p>
+        </div>
+        <button class="btn" onclick="openForm('factura')">+ Registrar factura</button>
+      </div>
+
+      <div class="grid-4">
+        <div class="card"><div class="card-title">IVA débito ejercicio</div><div class="metric-value">${fmtARS(totIVA,{compact:true})}</div><div class="metric-sub">10,5% sobre ventas</div></div>
+        <div class="card"><div class="card-title">Facturado total</div><div class="metric-value">${fmtARS(totFac,{compact:true})}</div><div class="metric-sub">${facs.length} facturas A</div></div>
+        <div class="card"><div class="card-title">Retenciones totales</div><div class="metric-value">${fmtARS(totRet,{compact:true})}</div><div class="metric-sub">A computar en DDJJ</div></div>
+        <div class="card"><div class="card-title">Por cobrar</div><div class="metric-value warn-c" style="color: var(--warn);">${fmtARS(pendiente,{compact:true})}</div><div class="metric-sub">Pendientes</div></div>
+      </div>
+
+      <div class="info-box">ℹ <strong>Retenciones discriminadas:</strong>
+        Ganancias <strong>${fmtARS(totRetGan)}</strong> ·
+        IVA <strong>${fmtARS(totRetIVA)}</strong> ·
+        IIBB <strong>${fmtARS(totRetIIBB)}</strong>
+      </div>
+
+      <div class="table-card">
+        <table>
+          <thead><tr>
+            <th>N°</th><th>Fecha</th><th>Cliente</th>
+            <th class="num">Neto</th><th class="num">IVA</th><th class="num">Total</th>
+            <th class="num">Ret. Gan.</th><th class="num">Ret. IVA</th><th class="num">Ret. IIBB</th>
+            <th>Estado</th><th></th>
+          </tr></thead>
+          <tbody>
+            ${facs.length === 0 ? '<tr><td colspan="11" class="empty-msg">Sin facturas registradas.</td></tr>' :
+              facs.map(f => `
+                <tr>
+                  <td>${f.numero}</td>
+                  <td>${fmtFecha(f.fecha)}</td>
+                  <td>${clienteName(f.clienteId)}</td>
+                  <td class="num">${fmtARS(f.neto)}</td>
+                  <td class="num">${fmtARS(f.iva)}</td>
+                  <td class="num"><strong>${fmtARS(f.total)}</strong></td>
+                  <td class="num">${f.retGanancias ? fmtARS(f.retGanancias) : '—'}</td>
+                  <td class="num">${f.retIVA ? fmtARS(f.retIVA) : '—'}</td>
+                  <td class="num">${f.retIIBB ? fmtARS(f.retIIBB) : '—'}</td>
+                  <td>${f.estado === 'cobrada' ? '<span class="tag tag-green">Cobrada</span>' : '<span class="tag tag-gold">Pendiente</span>'}</td>
+                  <td>
+                    <div class="actions-cell">
+                      <button class="icon-btn" onclick="openForm('factura','${f.id}')">Editar</button>
+                      <button class="icon-btn del" onclick="deleteItem('facturas','${f.id}')">Borrar</button>
+                    </div>
+                  </td>
+                </tr>
+              `).join('')
+            }
+          </tbody>
+        </table>
+      </div>
+    `;
+  },
+
+  gastos() {
+    const gas = [...State.gastos].sort((a,b) => b.fecha.localeCompare(a.fecha));
+    const credito = Calc.totalIVACredito();
+    const combust = gas.filter(g => g.categoria === 'Combustible').reduce((s,g) => s + g.total, 0);
+    const manten = gas.filter(g => ['Mantenimiento','Repuestos'].includes(g.categoria)).reduce((s,g) => s + g.total, 0);
+    const sinFact = gas.filter(g => !g.conFactura).reduce((s,g) => s + g.total, 0);
+
+    return `
+      <div class="row-between" style="margin-bottom: 14px;">
+        <div>
+          <h1 class="page-title">Gastos</h1>
+          <p class="page-sub">Con factura y sin factura — el IVA se discrimina solo si tiene factura A</p>
+        </div>
+        <button class="btn" onclick="openForm('gasto')">+ Cargar gasto</button>
+      </div>
+
+      <div class="grid-4">
+        <div class="card"><div class="card-title">IVA crédito ejercicio</div><div class="metric-value">${fmtARS(credito,{compact:true})}</div><div class="metric-sub">Total acumulado</div></div>
+        <div class="card"><div class="card-title">Combustible</div><div class="metric-value">${fmtARS(combust,{compact:true})}</div></div>
+        <div class="card"><div class="card-title">Mant. + Repuestos</div><div class="metric-value">${fmtARS(manten,{compact:true})}</div></div>
+        <div class="card"><div class="card-title">Sin factura</div><div class="metric-value">${fmtARS(sinFact,{compact:true})}</div><div class="metric-sub">No genera IVA crédito</div></div>
+      </div>
+
+      <div class="table-card">
+        <table>
+          <thead><tr><th>Fecha</th><th>Proveedor</th><th>Concepto</th><th>Cat.</th><th class="num">Neto</th><th class="num">IVA</th><th class="num">Total</th><th>Fact.</th><th></th></tr></thead>
+          <tbody>
+            ${gas.length === 0 ? '<tr><td colspan="9" class="empty-msg">Sin gastos cargados.</td></tr>' :
+              gas.map(g => {
+                const tagClass = g.categoria === 'Combustible' ? 'tag-rust' : g.categoria === 'Servicios' || g.categoria === 'Maquinaria' ? 'tag-blue' : 'tag-grey';
+                return `<tr>
+                  <td>${fmtFecha(g.fecha)}</td>
+                  <td>${proveedorName(g.proveedorId)}</td>
+                  <td>${g.concepto}</td>
+                  <td><span class="tag ${tagClass}">${g.categoria}</span></td>
+                  <td class="num">${fmtARS(g.neto)}</td>
+                  <td class="num">${g.iva ? fmtARS(g.iva) : '—'}</td>
+                  <td class="num"><strong>${fmtARS(g.total)}</strong></td>
+                  <td>${g.conFactura ? (g.numFactura || 'Sí') : '<span class="tag tag-rust">Sin fact.</span>'}</td>
+                  <td>
+                    <div class="actions-cell">
+                      <button class="icon-btn" onclick="openForm('gasto','${g.id}')">Editar</button>
+                      <button class="icon-btn del" onclick="deleteItem('gastos','${g.id}')">Borrar</button>
+                    </div>
+                  </td>
+                </tr>`;
+              }).join('')
+            }
+          </tbody>
+        </table>
+      </div>
+    `;
+  },
+
+  cheques() {
+    const recibidos = State.cheques.filter(c => c.tipo === 'recibido').sort((a,b) => b.fechaPago.localeCompare(a.fechaPago));
+    const enCartera = recibidos.filter(c => c.estado === 'aceptado').reduce((s,c) => s + c.monto, 0);
+    const endosados = recibidos.filter(c => c.estado === 'endosado').reduce((s,c) => s + c.monto, 0);
+
+    return `
+      <div class="row-between" style="margin-bottom: 14px;">
+        <div>
+          <h1 class="page-title">Cheques y transferencias</h1>
+          <p class="page-sub">Recibidos · emitidos · endosados — con destino y estado</p>
+        </div>
+        <button class="btn" onclick="openForm('cheque')">+ Registrar cheque</button>
+      </div>
+
+      <div class="grid-4">
+        <div class="card"><div class="card-title">En cartera</div><div class="metric-value">${fmtARS(enCartera,{compact:true})}</div><div class="metric-sub">Aceptados sin depositar</div></div>
+        <div class="card"><div class="card-title">Endosados a proveedores</div><div class="metric-value">${fmtARS(endosados,{compact:true})}</div></div>
+        <div class="card"><div class="card-title">Total recibidos</div><div class="metric-value">${recibidos.length}</div><div class="metric-sub">Histórico</div></div>
+        <div class="card"><div class="card-title">Total monto</div><div class="metric-value">${fmtARS(recibidos.reduce((s,c) => s+c.monto,0),{compact:true})}</div></div>
+      </div>
+
+      <div class="info-box">ℹ <strong>Tip:</strong> "Endosado" = el cheque se le entregó a un proveedor. "Aceptado" = está en cartera. "Depositado" = se cobró en banco.</div>
+
+      <div class="table-card">
+        <table>
+          <thead>
+            <tr><th>Cliente / Endosante</th><th>Emisor</th><th>Banco</th><th>N°</th><th class="num">Monto</th><th>Pago</th><th>Destino</th><th>Estado</th><th></th></tr>
+          </thead>
+          <tbody>
+            ${recibidos.length === 0 ? '<tr><td colspan="9" class="empty-msg">Sin cheques cargados.</td></tr>' :
+              recibidos.map(c => {
+                const tagMap = { depositado:'tag-green', endosado:'tag-blue', aceptado:'tag-gold', rechazado:'tag-rust' };
+                return `<tr>
+                  <td>${clienteName(c.endosanteId)}</td>
+                  <td>${c.emisor}</td>
+                  <td>${c.banco || '—'}</td>
+                  <td class="mono">${c.numero}</td>
+                  <td class="num"><strong>${fmtARS(c.monto)}</strong></td>
+                  <td>${fmtFecha(c.fechaPago)}</td>
+                  <td>${c.destino || '—'}</td>
+                  <td><span class="tag ${tagMap[c.estado]||'tag-grey'}">${c.estado}</span></td>
+                  <td>
+                    <div class="actions-cell">
+                      <button class="icon-btn" onclick="openForm('cheque','${c.id}')">Editar</button>
+                      <button class="icon-btn del" onclick="deleteItem('cheques','${c.id}')">Borrar</button>
+                    </div>
+                  </td>
+                </tr>`;
+              }).join('')
+            }
+          </tbody>
+        </table>
+      </div>
+    `;
+  },
+
+  financiacion() {
+    const cuotas = [...State.cuotasMaquina].sort((a,b) => a.numero - b.numero);
+    const totalUSD = cuotas.reduce((s,c) => s + c.totalUSD, 0);
+    const pagadasUSD = cuotas.filter(c => c.estado === 'pagada').reduce((s,c) => s + c.totalUSD, 0);
+    const pendUSD = totalUSD - pagadasUSD;
+
+    return `
+      <h1 class="page-title">Financiación máquina · Caimán</h1>
+      <p class="page-sub">Compra USD 205.000 · Plan en cuotas con financiación</p>
+
+      <div class="grid-3">
+        <div class="card"><div class="card-title">Valor máquina</div><div class="metric-value">USD 205.000</div><div class="metric-sub">Caimán nueva</div></div>
+        <div class="card"><div class="card-title">Pagado a la fecha</div><div class="metric-value pos" style="color: var(--positive);">${fmtUSD(pagadasUSD + 130000)}</div><div class="metric-sub">Cuotas + entregas</div></div>
+        <div class="card"><div class="card-title">Pendiente</div><div class="metric-value warn-c" style="color: var(--warn);">${fmtUSD(pendUSD)}</div><div class="metric-sub">${cuotas.filter(c=>c.estado==='pendiente').length} cuotas</div></div>
+      </div>
+
+      <div class="card">
+        <div class="row-between" style="margin-bottom: 14px;">
+          <div class="section-title" style="margin: 0;">Plan de pagos</div>
+          <button class="btn btn-sm" onclick="openForm('cuota')">+ Agregar cuota</button>
+        </div>
+        <table>
+          <thead><tr><th>Cuota</th><th>Vencimiento</th><th class="num">Capital USD</th><th class="num">Financ.</th><th class="num">Total USD</th><th class="num">Total ARS</th><th>Estado</th><th></th></tr></thead>
+          <tbody>
+            ${cuotas.map(c => `
+              <tr ${c.estado === 'pendiente' && c === cuotas.find(x=>x.estado==='pendiente') ? 'style="background:#fff8e0;"' : ''}>
+                <td>${c.numero}</td>
+                <td>${fmtFecha(c.vencimiento)}</td>
+                <td class="num">${fmtUSD(c.capitalUSD)}</td>
+                <td class="num">${fmtUSD(c.financUSD)}</td>
+                <td class="num"><strong>${fmtUSD(c.totalUSD)}</strong></td>
+                <td class="num">${c.totalARS ? fmtARS(c.totalARS) : '—'}</td>
+                <td>${c.estado === 'pagada' ? '<span class="tag tag-green">Pagada</span>' : '<span class="tag tag-gold">Pendiente</span>'}</td>
+                <td>
+                  <div class="actions-cell">
+                    <button class="icon-btn" onclick="openForm('cuota','${c.id}')">Editar</button>
+                  </div>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  },
+
+  clientes() {
+    const cls = State.clientes.map(c => ({...c, ...Calc.saldoCliente(c.id)}));
+    return `
+      <div class="row-between" style="margin-bottom: 14px;">
+        <div>
+          <h1 class="page-title">Clientes</h1>
+          <p class="page-sub">Cuenta corriente, agentes de retención e ingresos por cliente</p>
+        </div>
+        <button class="btn" onclick="openForm('cliente')">+ Nuevo cliente</button>
+      </div>
+
+      <div class="info-box">ℹ <strong>Tip:</strong> marcá si tu cliente es agente de retención de Ganancias, IVA o IIBB y configurá la alícuota. Al cargar una factura podrás aplicarla automáticamente.</div>
+
+      <div class="table-card">
+        <table>
+          <thead><tr>
+            <th>Razón social</th><th>CUIT</th>
+            <th>Agente Gan.</th><th>Agente IVA</th><th>Agente IIBB</th>
+            <th class="num">Has</th><th class="num">Facturado</th><th class="num">Saldo</th><th></th>
+          </tr></thead>
+          <tbody>
+            ${cls.length === 0 ? '<tr><td colspan="9" class="empty-msg">Sin clientes.</td></tr>' :
+              cls.map(c => {
+                const ubic = [c.ciudad, c.provincia].filter(Boolean).join(', ');
+                return `
+                <tr>
+                  <td>
+                    <strong>${c.razonSocial}</strong>
+                    ${ubic ? `<div style="font-size: 11px; color: var(--ink-mute); margin-top: 2px;">${ubic}</div>` : ''}
+                  </td>
+                  <td>${c.cuit || '—'}</td>
+                  <td>${c.agenteGanancias ? `<span class="tag tag-blue">${c.alicGanancias}%</span>` : '<span style="color:var(--ink-mute);">—</span>'}</td>
+                  <td>${c.agenteIVA ? `<span class="tag tag-blue">${c.alicIVA}%</span>` : '<span style="color:var(--ink-mute);">—</span>'}</td>
+                  <td>${c.agenteIIBB ? `<span class="tag tag-blue">${c.alicIIBB}%</span>` : '<span style="color:var(--ink-mute);">—</span>'}</td>
+                  <td class="num">${fmtNum(c.has)}</td>
+                  <td class="num">${fmtARS(c.facturado)}</td>
+                  <td class="num"><strong ${c.pendiente > 0 ? 'style="color:var(--warn);"' : ''}>${fmtARS(c.pendiente)}</strong></td>
+                  <td>
+                    <div class="actions-cell">
+                      <button class="icon-btn" onclick="openForm('cliente','${c.id}')">Editar</button>
+                      <button class="icon-btn del" onclick="deleteItem('clientes','${c.id}')">Borrar</button>
+                    </div>
+                  </td>
+                </tr>
+              `}).join('')
+            }
+          </tbody>
+        </table>
+      </div>
+    `;
+  },
+
+  proveedores() {
+    const provs = State.proveedores.map(p => ({...p, ...Calc.saldoProveedor(p.id)}));
+    return `
+      <div class="row-between" style="margin-bottom: 14px;">
+        <div>
+          <h1 class="page-title">Proveedores</h1>
+          <p class="page-sub">Cuenta corriente con cada proveedor</p>
+        </div>
+        <button class="btn" onclick="openForm('proveedor')">+ Nuevo proveedor</button>
+      </div>
+
+      <div class="table-card">
+        <table>
+          <thead><tr><th>Proveedor</th><th>Categoría</th><th class="num">Items</th><th class="num">Total compras</th><th></th></tr></thead>
+          <tbody>
+            ${provs.length === 0 ? '<tr><td colspan="5" class="empty-msg">Sin proveedores.</td></tr>' :
+              provs.map(p => `
+                <tr>
+                  <td><strong>${p.razonSocial}</strong></td>
+                  <td>${p.categoria}</td>
+                  <td class="num">${p.items}</td>
+                  <td class="num">${fmtARS(p.total)}</td>
+                  <td>
+                    <div class="actions-cell">
+                      <button class="icon-btn" onclick="openForm('proveedor','${p.id}')">Editar</button>
+                      <button class="icon-btn del" onclick="deleteItem('proveedores','${p.id}')">Borrar</button>
+                    </div>
+                  </td>
+                </tr>
+              `).join('')
+            }
+          </tbody>
+        </table>
+      </div>
+    `;
+  },
+
+  operario() {
+    if (State.operarios.length === 0) {
+      return `
+        <h1 class="page-title">Operarios</h1>
+        <p class="page-sub">Aún no hay operarios cargados.</p>
+        <div class="card" style="text-align: center; padding: 40px;">
+          <div style="font-size: 48px; opacity: 0.3;">◎</div>
+          <p style="margin: 14px 0;">Comenzá agregando un operario para llevar la liquidación automática.</p>
+          <button class="btn" onclick="openForm('operarioAlta')">+ Agregar operario</button>
+        </div>
+      `;
+    }
+
+    const opSelId = window._opActual || State.operarios[0].id;
+    const op = findById(State.operarios, opSelId) || State.operarios[0];
+
+    const liq = Calc.liquidacionTotal(op.id);
+    const totGen = liq.reduce((s,l) => s + l.generado, 0);
+    const totCom = liq.reduce((s,l) => s + l.comision, 0);
+    const totFijo = liq.reduce((s,l) => s + l.sueldoFijo, 0);
+    const totHas = liq.reduce((s,l) => s + l.has, 0);
+    const totDias = liq.reduce((s,l) => s + l.dias, 0);
+    const totTotal = liq.reduce((s,l) => s + l.totalMes, 0);
+    const totPag = liq.reduce((s,l) => s + l.pagado, 0);
+    const saldo = totPag - totTotal;
+
+    const ultimosPagos = State.pagosOperarios
+      .filter(p => p.operarioId === op.id)
+      .sort((a,b) => b.fecha.localeCompare(a.fecha))
+      .slice(0,8);
+
+    const dt = State.diasTrabajados.filter(d => d.operarioId === op.id).sort((a,b) => b.mes.localeCompare(a.mes));
+
+    return `
+      <div class="row-between" style="margin-bottom: 14px;">
+        <div>
+          <h1 class="page-title">Operarios</h1>
+          <p class="page-sub">Liquidación automática · cada operario con su esquema propio</p>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn btn-ghost" onclick="openForm('operarioAlta')">+ Operario</button>
+          <button class="btn" onclick="openForm('pagoOp', null, '${op.id}')">+ Registrar pago</button>
+        </div>
+      </div>
+
+      <div class="tabs">
+        ${State.operarios.map(o => `
+          <div class="tab ${o.id === op.id ? 'active' : ''}" onclick="setOpActual('${o.id}')">
+            ${o.nombre} ${!o.activo ? '<span style="font-size:9px; opacity:0.6;">· inactivo</span>' : ''}
+          </div>
+        `).join('')}
+      </div>
+
+      <div class="card" style="margin-bottom: 16px;">
+        <div class="row-between">
+          <div>
+            <div style="font-family: 'Fraunces', serif; font-size: 22px; font-weight: 600;">${op.nombre}</div>
+            <div style="font-size: 12px; color: var(--ink-mute); margin-top: 4px;">
+              ${op.esquema === 'has'
+                ? `Esquema: Sueldo fijo ${fmtARS(op.sueldoFijo)}/mes + ${op.comisionPct}% sobre neto de hectáreas`
+                : `Esquema: Sueldo fijo ${fmtARS(op.sueldoFijo)}/mes + ${fmtARS(op.montoPorDia)}/día trabajado`
+              }
+            </div>
+          </div>
+          <div style="display: flex; gap: 6px;">
+            <button class="icon-btn" onclick="openForm('operarioAlta','${op.id}')">Editar config</button>
+            <button class="icon-btn del" onclick="deleteOperario('${op.id}')">Borrar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-4">
+        ${op.esquema === 'has' ? `
+          <div class="card"><div class="card-title">Generado ejercicio</div><div class="metric-value">${fmtARS(totGen,{compact:true})}</div><div class="metric-sub">${fmtNum(totHas)} ha</div></div>
+          <div class="card"><div class="card-title">Comisión ${op.comisionPct}%</div><div class="metric-value">${fmtARS(totCom,{compact:true})}</div></div>
+        ` : `
+          <div class="card"><div class="card-title">Días trabajados</div><div class="metric-value">${fmtNum(totDias)}</div><div class="metric-sub">Acumulado</div></div>
+          <div class="card"><div class="card-title">Por días</div><div class="metric-value">${fmtARS(totCom,{compact:true})}</div><div class="metric-sub">${fmtARS(op.montoPorDia)}/día</div></div>
+        `}
+        <div class="card"><div class="card-title">Sueldo fijo</div><div class="metric-value">${fmtARS(totFijo,{compact:true})}</div></div>
+        <div class="card"><div class="card-title">Saldo actual</div><div class="metric-value ${saldo>=0?'pos':'neg'}" style="color:${saldo>=0?'var(--positive)':'var(--negative)'};">${saldo>=0?'+':''}${fmtARS(saldo)}</div><div class="metric-sub">${saldo>=0?'A favor del operario':'A pagar'}</div></div>
+      </div>
+
+      ${op.esquema === 'dias' ? `
+        <div class="card">
+          <div class="row-between" style="margin-bottom: 10px;">
+            <div class="section-title" style="margin: 0;">Días trabajados por mes</div>
+            <button class="btn btn-sm" onclick="openForm('diasTrab', null, '${op.id}')">+ Cargar mes</button>
+          </div>
+          <table>
+            <thead><tr><th>Mes</th><th class="num">Días</th><th class="num">Importe</th><th></th></tr></thead>
+            <tbody>
+              ${dt.length === 0 ? '<tr><td colspan="4" class="empty-msg">Sin días registrados. Cargá los días trabajados de cada mes.</td></tr>' :
+                dt.map(d => `
+                  <tr>
+                    <td>${d.mes}</td>
+                    <td class="num">${fmtNum(d.dias)}</td>
+                    <td class="num"><strong>${fmtARS(d.dias * op.montoPorDia)}</strong></td>
+                    <td>
+                      <div class="actions-cell">
+                        <button class="icon-btn" onclick="openForm('diasTrab','${d.id}','${op.id}')">Editar</button>
+                        <button class="icon-btn del" onclick="deleteItem('diasTrabajados','${d.id}')">Borrar</button>
+                      </div>
+                    </td>
+                  </tr>
+                `).join('')
+              }
+            </tbody>
+          </table>
+        </div>
+      ` : ''}
+
+      <div class="card">
+        <div class="section-title" style="margin-top: 0;">Liquidación mensual (auto)</div>
+        <table>
+          <thead><tr>
+            <th>Mes</th>
+            ${op.esquema === 'has' ? '<th class="num">Has</th><th class="num">Generado</th>' : '<th class="num">Días</th>'}
+            <th class="num">Sueldo fijo</th>
+            <th class="num">${op.esquema === 'has' ? `Comisión ${op.comisionPct}%` : 'Por días'}</th>
+            <th class="num">Total mes</th>
+            <th class="num">Pagado</th>
+            <th class="num">Saldo</th>
+          </tr></thead>
+          <tbody>
+            ${liq.length === 0 ? `<tr><td colspan="${op.esquema==='has'?8:7}" class="empty-msg">Sin liquidaciones aún. Cargá ingresos o días para ver el cálculo.</td></tr>` :
+              liq.map(l => `
+                <tr>
+                  <td>${l.mes}</td>
+                  ${op.esquema === 'has' ? `<td class="num">${fmtNum(l.has)}</td><td class="num">${fmtARS(l.generado)}</td>` : `<td class="num">${fmtNum(l.dias)}</td>`}
+                  <td class="num">${fmtARS(l.sueldoFijo)}</td>
+                  <td class="num">${fmtARS(l.comision)}</td>
+                  <td class="num"><strong>${fmtARS(l.totalMes)}</strong></td>
+                  <td class="num">${fmtARS(l.pagado)}</td>
+                  <td class="num ${l.saldo >= 0 ? 'pos' : 'neg'}" style="color:${l.saldo>=0?'var(--positive)':'var(--negative)'};">${l.saldo>=0?'+':''}${fmtARS(l.saldo)}</td>
+                </tr>
+              `).join('')
+            }
+            ${liq.length > 0 ? `
+              <tr style="background: #f0ebd9; font-weight: 700;">
+                <td>TOTAL</td>
+                ${op.esquema === 'has' ? `<td class="num">${fmtNum(totHas)}</td><td class="num">${fmtARS(totGen)}</td>` : `<td class="num">${fmtNum(totDias)}</td>`}
+                <td class="num">${fmtARS(totFijo)}</td>
+                <td class="num">${fmtARS(totCom)}</td>
+                <td class="num">${fmtARS(totTotal)}</td>
+                <td class="num">${fmtARS(totPag)}</td>
+                <td class="num ${saldo>=0?'pos':'neg'}" style="color:${saldo>=0?'var(--positive)':'var(--negative)'};">${saldo>=0?'+':''}${fmtARS(saldo)}</td>
+              </tr>
+            ` : ''}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card" style="margin-top: 16px;">
+        <div class="section-title" style="margin-top: 0;">Últimos pagos a ${op.nombre}</div>
+        <table>
+          <thead><tr><th>Fecha</th><th>Origen</th><th>Mes liq.</th><th class="num">Monto</th><th></th></tr></thead>
+          <tbody>
+            ${ultimosPagos.length === 0 ? '<tr><td colspan="5" class="empty-msg">Sin pagos a este operario.</td></tr>' :
+              ultimosPagos.map(p => `
+                <tr>
+                  <td>${fmtFecha(p.fecha)}</td>
+                  <td>${p.origen}</td>
+                  <td>${p.mes}</td>
+                  <td class="num"><strong>${fmtARS(p.monto)}</strong></td>
+                  <td>
+                    <div class="actions-cell">
+                      <button class="icon-btn" onclick="openForm('pagoOp','${p.id}','${op.id}')">Editar</button>
+                      <button class="icon-btn del" onclick="deleteItem('pagosOperarios','${p.id}')">Borrar</button>
+                    </div>
+                  </td>
+                </tr>
+              `).join('')
+            }
+          </tbody>
+        </table>
+      </div>
+    `;
+  },
+
+  socios() {
+    const u = Calc.utilidadEjercicio();
+    const retA = Calc.retirosSocio(State.config.socioA);
+    const retB = Calc.retirosSocio(State.config.socioB);
+    const retiros = [...State.retirosSocios].sort((a,b) => b.fecha.localeCompare(a.fecha));
+
+    return `
+      <div class="row-between" style="margin-bottom: 14px;">
+        <div>
+          <h1 class="page-title">Socios</h1>
+          <p class="page-sub">Distribución de utilidades y registro de retiros</p>
+        </div>
+        <button class="btn" onclick="openForm('retiro')">+ Registrar retiro</button>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">${State.config.socioA}</div>
+          <div class="metric-value">${State.config.pctA.toFixed(2)}%</div>
+          <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--line-soft);">
+            <div style="display: flex; justify-content: space-between; padding: 5px 0;"><span>Utilidad asignada</span> <strong class="mono">${fmtARS(u.utilidadA)}</strong></div>
+            <div style="display: flex; justify-content: space-between; padding: 5px 0;"><span>Retiros realizados</span> <strong class="mono">${fmtARS(retA)}</strong></div>
+            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-top: 1px solid var(--line-soft); margin-top: 6px;"><span><strong>Saldo a retirar</strong></span> <strong class="mono ${u.utilidadA-retA>=0?'pos':'neg'}" style="color:${u.utilidadA-retA>=0?'var(--positive)':'var(--negative)'};">${u.utilidadA-retA>=0?'+':''}${fmtARS(u.utilidadA-retA)}</strong></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">${State.config.socioB}</div>
+          <div class="metric-value">${State.config.pctB.toFixed(2)}%</div>
+          <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--line-soft);">
+            <div style="display: flex; justify-content: space-between; padding: 5px 0;"><span>Utilidad asignada</span> <strong class="mono">${fmtARS(u.utilidadB)}</strong></div>
+            <div style="display: flex; justify-content: space-between; padding: 5px 0;"><span>Retiros realizados</span> <strong class="mono">${fmtARS(retB)}</strong></div>
+            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-top: 1px solid var(--line-soft); margin-top: 6px;"><span><strong>Saldo a retirar</strong></span> <strong class="mono ${u.utilidadB-retB>=0?'pos':'neg'}" style="color:${u.utilidadB-retB>=0?'var(--positive)':'var(--negative)'};">${u.utilidadB-retB>=0?'+':''}${fmtARS(u.utilidadB-retB)}</strong></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title" style="margin-top: 0;">Cálculo de utilidad ejercicio</div>
+        <table>
+          <tbody>
+            <tr><td>(+) Ingresos netos (sin IVA)</td><td class="num">${fmtARS(u.ingresosNetos)}</td></tr>
+            <tr><td>(−) Gastos netos (sin IVA, sin maquinaria)</td><td class="num">(${fmtARS(u.gastosNetos)})</td></tr>
+            <tr><td>(−) Sueldos y comisiones operario</td><td class="num">(${fmtARS(u.totalOperario)})</td></tr>
+            <tr style="background: #f0ebd9; font-weight: 700;"><td>(=) UTILIDAD NETA EJERCICIO</td><td class="num">${fmtARS(u.utilidad)}</td></tr>
+            <tr><td>↳ ${State.config.socioA} ${State.config.pctA.toFixed(2)}%</td><td class="num"><strong>${fmtARS(u.utilidadA)}</strong></td></tr>
+            <tr><td>↳ ${State.config.socioB} ${State.config.pctB.toFixed(2)}%</td><td class="num"><strong>${fmtARS(u.utilidadB)}</strong></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card" style="margin-top: 16px;">
+        <div class="section-title" style="margin-top: 0;">Retiros</div>
+        <table>
+          <thead><tr><th>Fecha</th><th>Socio</th><th>Origen</th><th class="num">Monto</th><th></th></tr></thead>
+          <tbody>
+            ${retiros.length === 0 ? '<tr><td colspan="5" class="empty-msg">Sin retiros.</td></tr>' :
+              retiros.map(r => `
+                <tr>
+                  <td>${fmtFecha(r.fecha)}</td>
+                  <td><strong>${r.socio}</strong></td>
+                  <td>${r.origen}</td>
+                  <td class="num"><strong>${fmtARS(r.monto)}</strong></td>
+                  <td>
+                    <div class="actions-cell">
+                      <button class="icon-btn" onclick="openForm('retiro','${r.id}')">Editar</button>
+                      <button class="icon-btn del" onclick="deleteItem('retirosSocios','${r.id}')">Borrar</button>
+                    </div>
+                  </td>
+                </tr>
+              `).join('')
+            }
+          </tbody>
+        </table>
+      </div>
+    `;
+  },
+
+  reportes() {
+    // agrupamos trabajos por mes
+    const porMes = {};
+    State.trabajos.forEach(t => {
+      const m = mesYY(t.fecha);
+      if (!porMes[m]) porMes[m] = { has: 0, ingreso: 0 };
+      porMes[m].has += t.has;
+      porMes[m].ingreso += t.neto;
+    });
+    const meses = Object.keys(porMes).sort();
+    const tcAct = State.config.tcActual;
+
+    // retenciones por mes y tipo
+    const retPorMes = {};
+    State.facturas.forEach(f => {
+      const m = mesYY(f.fecha);
+      if (!retPorMes[m]) retPorMes[m] = { gan: 0, iva: 0, iibb: 0 };
+      retPorMes[m].gan += f.retGanancias || 0;
+      retPorMes[m].iva += f.retIVA || 0;
+      retPorMes[m].iibb += f.retIIBB || 0;
+    });
+    const mesesRet = Object.keys(retPorMes).sort();
+    const totRetGan = Calc.totalRetGanancias();
+    const totRetIVA = Calc.totalRetIVA();
+    const totRetIIBB = Calc.totalRetIIBB();
+
+    return `
+      <h1 class="page-title">Reportes</h1>
+      <p class="page-sub">Análisis histórico del negocio</p>
+
+      <div class="card">
+        <div class="section-title" style="margin-top: 0;">Retenciones recibidas por tipo · A computar en DDJJ</div>
+        <div class="grid-3" style="margin-bottom: 20px;">
+          <div style="padding: 18px; background: linear-gradient(135deg, #dde8db 0%, #fffdf7 100%); border-radius: 8px; border: 1px solid var(--accent);">
+            <div class="card-title">Ganancias</div>
+            <div class="metric-value" style="color: var(--accent);">${fmtARS(totRetGan, {compact:true})}</div>
+            <div class="metric-sub">A descontar de DDJJ Ganancias anual</div>
+          </div>
+          <div style="padding: 18px; background: linear-gradient(135deg, #d8e2ec 0%, #fffdf7 100%); border-radius: 8px; border: 1px solid #2c4660;">
+            <div class="card-title">IVA</div>
+            <div class="metric-value" style="color: #2c4660;">${fmtARS(totRetIVA, {compact:true})}</div>
+            <div class="metric-sub">A descontar de IVA mensual</div>
+          </div>
+          <div style="padding: 18px; background: linear-gradient(135deg, #f4e6c5 0%, #fffdf7 100%); border-radius: 8px; border: 1px solid var(--gold);">
+            <div class="card-title">IIBB</div>
+            <div class="metric-value" style="color: #7a5a16;">${fmtARS(totRetIIBB, {compact:true})}</div>
+            <div class="metric-sub">A descontar de DDJJ IIBB</div>
+          </div>
+        </div>
+
+        ${mesesRet.length === 0 ? '' : `
+          <table>
+            <thead><tr><th>Mes</th><th class="num">Ret. Ganancias</th><th class="num">Ret. IVA</th><th class="num">Ret. IIBB</th><th class="num">Total mes</th></tr></thead>
+            <tbody>
+              ${mesesRet.map(m => {
+                const r = retPorMes[m];
+                const totMes = r.gan + r.iva + r.iibb;
+                return totMes === 0 ? '' : `<tr>
+                  <td>${m}</td>
+                  <td class="num">${fmtARS(r.gan)}</td>
+                  <td class="num">${fmtARS(r.iva)}</td>
+                  <td class="num">${fmtARS(r.iibb)}</td>
+                  <td class="num"><strong>${fmtARS(totMes)}</strong></td>
+                </tr>`;
+              }).join('')}
+              <tr style="background: #f0ebd9; font-weight: 700;">
+                <td>TOTAL</td>
+                <td class="num">${fmtARS(totRetGan)}</td>
+                <td class="num">${fmtARS(totRetIVA)}</td>
+                <td class="num">${fmtARS(totRetIIBB)}</td>
+                <td class="num">${fmtARS(totRetGan+totRetIVA+totRetIIBB)}</td>
+              </tr>
+            </tbody>
+          </table>
+        `}
+      </div>
+
+      <div class="card">
+        <div class="section-title" style="margin-top: 0;">Resumen mensual del ejercicio</div>
+        ${meses.length === 0 ? '<div class="empty-msg">Sin datos para reportar aún.</div>' : `
+          <table>
+            <thead><tr><th>Mes</th><th class="num">Has</th><th class="num">$/ha promedio</th><th class="num">Ingreso ARS</th><th class="num">Ingreso USD</th></tr></thead>
+            <tbody>
+              ${meses.map(m => {
+                const d = porMes[m];
+                const precPromedio = d.has > 0 ? d.ingreso / d.has : 0;
+                return `<tr>
+                  <td>${m}</td>
+                  <td class="num">${fmtNum(d.has)}</td>
+                  <td class="num">${fmtARS(precPromedio)}</td>
+                  <td class="num"><strong>${fmtARS(d.ingreso)}</strong></td>
+                  <td class="num">${fmtUSD(d.ingreso / tcAct)}</td>
+                </tr>`;
+              }).join('')}
+              <tr style="background:#f0ebd9; font-weight: 700;">
+                <td>TOTAL</td>
+                <td class="num">${fmtNum(meses.reduce((s,m) => s + porMes[m].has, 0))}</td>
+                <td class="num">—</td>
+                <td class="num">${fmtARS(meses.reduce((s,m) => s + porMes[m].ingreso, 0))}</td>
+                <td class="num">${fmtUSD(meses.reduce((s,m) => s + porMes[m].ingreso, 0) / tcAct)}</td>
+              </tr>
+            </tbody>
+          </table>
+        `}
+      </div>
+
+      <div class="info-box">ℹ <strong>Próximamente:</strong> margen mensual histórico USD, comparativa entre ejercicios, costo operativo por hectárea, gráficos de tendencia.</div>
+    `;
+  },
+
+  config() {
+    const precios = [...State.preciosHistorico].sort((a,b) => b.desde.localeCompare(a.desde));
+    return `
+      <h1 class="page-title">Configuración</h1>
+      <p class="page-sub">Parámetros del sistema</p>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="section-title" style="margin-top: 0;">Sociedad</div>
+          <div class="form-group">
+            <label>Razón social</label>
+            <input type="text" id="cfg-sociedadNombre" value="${State.config.sociedadNombre}">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Socio A · nombre</label>
+              <input type="text" id="cfg-socioA" value="${State.config.socioA}">
+            </div>
+            <div class="form-group">
+              <label>% Socio A</label>
+              <input type="number" step="0.0001" id="cfg-pctA" value="${State.config.pctA}">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Socio B · nombre</label>
+              <input type="text" id="cfg-socioB" value="${State.config.socioB}">
+            </div>
+            <div class="form-group">
+              <label>% Socio B</label>
+              <input type="number" step="0.0001" id="cfg-pctB" value="${State.config.pctB}">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>CUIT</label>
+            <input type="text" id="cfg-cuit" value="${State.config.cuit}" placeholder="30-XXXXXXXX-X">
+          </div>
+          <div class="form-group">
+            <label>Inicio de ejercicio</label>
+            <input type="date" id="cfg-inicioEjercicio" value="${State.config.inicioEjercicio}">
+          </div>
+          <button class="btn" onclick="saveConfig()" style="width:100%; margin-top: 8px;">Guardar configuración</button>
+        </div>
+
+        <div class="card">
+          <div class="section-title" style="margin-top: 0;">Parámetros generales</div>
+          <div class="info-box">ℹ Los <strong>operarios</strong> ahora se gestionan desde la sección <a style="color: var(--accent); cursor: pointer;" onclick="goTo('operario')">Operarios</a>. Cada uno tiene su propia configuración de pago.</div>
+
+          <div class="form-group">
+            <label>Tipo de cambio actual ($/USD)</label>
+            <input type="number" id="cfg-tcActual" value="${State.config.tcActual}">
+          </div>
+          <div class="form-group">
+            <label>Precio actual / ha ($)</label>
+            <input type="number" id="cfg-precioHaActual" value="${State.config.precioHaActual}">
+          </div>
+          <div class="form-group">
+            <label>IVA (%)</label>
+            <input type="number" step="0.1" id="cfg-ivaPct" value="${State.config.ivaPct}">
+          </div>
+
+          <div class="section-title" style="font-size: 16px;">Alícuotas de retención por defecto</div>
+          <div class="info-box">ℹ Estas alícuotas se sugieren cuando creás un cliente nuevo. Se pueden modificar por cliente o por factura.</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Ret. Ganancias (%)</label>
+              <input type="number" step="0.1" id="cfg-retencionGanancias" value="${State.config.retencionGanancias}">
+            </div>
+            <div class="form-group">
+              <label>Ret. IVA (%)</label>
+              <input type="number" step="0.1" id="cfg-retencionIVA" value="${State.config.retencionIVA}">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Ret. IIBB (%)</label>
+            <input type="number" step="0.1" id="cfg-retencionIIBB" value="${State.config.retencionIIBB}">
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="row-between" style="margin-bottom: 12px;">
+          <div class="section-title" style="margin: 0;">Precio por hectárea (histórico)</div>
+          <button class="btn btn-sm" onclick="openForm('precio')">+ Agregar precio</button>
+        </div>
+        <table>
+          <thead><tr><th>Vigente desde</th><th class="num">$/ha</th><th class="num">USD/ha</th><th></th></tr></thead>
+          <tbody>
+            ${precios.map(p => `
+              <tr>
+                <td>${fmtFecha(p.desde)}</td>
+                <td class="num"><strong>${fmtARS(p.precioARS)}</strong></td>
+                <td class="num">${fmtUSD(p.precioUSD)}</td>
+                <td>
+                  <div class="actions-cell">
+                    <button class="icon-btn del" onclick="deleteItem('preciosHistorico','${p.id}')">Borrar</button>
+                  </div>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card" style="margin-top: 16px;">
+        <div class="section-title" style="margin-top: 0;">Datos del sistema</div>
+        <table>
+          <tbody>
+            <tr><td>Total ingresos</td><td class="num"><strong>${State.trabajos.length}</strong></td></tr>
+            <tr><td>Total facturas</td><td class="num"><strong>${State.facturas.length}</strong></td></tr>
+            <tr><td>Total gastos</td><td class="num"><strong>${State.gastos.length}</strong></td></tr>
+            <tr><td>Total cheques</td><td class="num"><strong>${State.cheques.length}</strong></td></tr>
+            <tr><td>Total clientes</td><td class="num"><strong>${State.clientes.length}</strong></td></tr>
+            <tr><td>Total proveedores</td><td class="num"><strong>${State.proveedores.length}</strong></td></tr>
+          </tbody>
+        </table>
+        <div style="margin-top: 16px; display: flex; gap: 10px;">
+          <button class="btn" onclick="refreshFromBackend()">↻ Sincronizar datos</button>
+          <button class="btn btn-ghost" onclick="exportData()">Exportar JSON</button>
+        </div>
+        <div class="info-box" style="margin-top: 12px;">
+          ℹ <strong>Usuario:</strong> ${State._userEmail || 'sin login'} ·
+          <strong>Backend:</strong> ${BACKEND_URL && BACKEND_URL.length > 30 ? '✓ conectado' : '✗ no configurado'}
+        </div>
+      </div>
+    `;
+  }
+};
+
+// ============================================================================
+// FORMS — drawers para alta/edición
+// ============================================================================
+const Forms = {
+  trabajo(id) {
+    const t = id ? findById(State.trabajos, id) : null;
+    const cliOpts = State.clientes.map(c => `<option value="${c.id}" ${t && t.clienteId===c.id ? 'selected':''}>${c.razonSocial}</option>`).join('');
+    const facOpts = State.facturas.map(f => `<option value="${f.id}" ${t && t.facturaId===f.id ? 'selected':''}>Fact. ${f.numero} · ${clienteName(f.clienteId)}</option>`).join('');
+    return {
+      title: t ? 'Editar ingreso' : 'Cargar ingreso',
+      html: `
+        <div class="form-row">
+          <div class="form-group"><label>Fecha</label><input type="date" id="f-fecha" value="${t?t.fecha:new Date().toISOString().slice(0,10)}"></div>
+          <div class="form-group"><label>Hectáreas</label><input type="number" id="f-has" value="${t?t.has:''}" placeholder="0" oninput="recalcTrabajo()"></div>
+        </div>
+        <div class="form-group">
+          <label>Cliente</label>
+          <select id="f-clienteId">${cliOpts}</select>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Precio $/ha</label><input type="number" id="f-precioHa" value="${t?t.precioHa:State.config.precioHaActual}" oninput="recalcTrabajo()"></div>
+          <div class="form-group"><label>Subtotal neto</label><input type="text" id="f-neto" value="${t?fmtARS(t.neto):'$0'}" disabled style="background:var(--line-soft);"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>IVA ${State.config.ivaPct}%</label><input type="text" id="f-iva" value="${t?fmtARS(t.iva):'$0'}" disabled style="background:var(--line-soft);"></div>
+          <div class="form-group"><label>Total</label><input type="text" id="f-total" value="${t?fmtARS(t.total):'$0'}" disabled style="background:var(--line-soft);"></div>
+        </div>
+        <div class="form-group">
+          <label>Observaciones / lote</label>
+          <textarea id="f-obs" rows="2">${t?t.observaciones||'':''}</textarea>
+        </div>
+        <div class="form-group">
+          <label>Vincular a factura</label>
+          <select id="f-facturaId">
+            <option value="">Sin facturar aún</option>
+            ${facOpts}
+          </select>
+        </div>
+        <div class="drawer-actions">
+          <button class="btn" style="flex:1;" onclick="saveTrabajo('${t?t.id:''}')">Guardar</button>
+          <button class="btn btn-ghost" onclick="closeDrawer()">Cancelar</button>
+        </div>
+      `
+    };
+  },
+
+  factura(id) {
+    const f = id ? findById(State.facturas, id) : null;
+    const cliOpts = State.clientes.map(c => `<option value="${c.id}" ${f && f.clienteId===c.id ? 'selected':''}>${c.razonSocial}</option>`).join('');
+    return {
+      title: f ? 'Editar factura' : 'Registrar factura',
+      html: `
+        <div class="form-row">
+          <div class="form-group"><label>N° factura</label><input type="text" id="f-numero" value="${f?f.numero:''}" placeholder="014"></div>
+          <div class="form-group"><label>Fecha</label><input type="date" id="f-fecha" value="${f?f.fecha:new Date().toISOString().slice(0,10)}"></div>
+        </div>
+        <div class="form-group">
+          <label>Cliente</label>
+          <select id="f-clienteId" onchange="autoFillRetenciones()">${cliOpts}</select>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Neto ($)</label><input type="number" id="f-neto" value="${f?f.neto:''}" step="0.01" oninput="recalcFactura()"></div>
+          <div class="form-group"><label>IVA ($)</label><input type="number" id="f-iva" value="${f?f.iva:''}" step="0.01" oninput="recalcFactura()"></div>
+        </div>
+        <div class="form-group"><label>Total bruto ($)</label><input type="text" id="f-total" value="${f?fmtARS(f.total):'$0'}" disabled style="background:var(--line-soft);"></div>
+
+        <div class="info-box">ℹ Calcular IVA al ${State.config.ivaPct}%: <button class="btn btn-sm" type="button" onclick="autoIVA()">Auto</button></div>
+
+        <div class="section-title" style="font-size: 16px; margin-top: 20px;">Retenciones aplicadas</div>
+        <div class="info-box" style="background: #f4e6c5; color: #7a5a16;">⚙ Las alícuotas vienen del cliente seleccionado. Podés ajustar manualmente cada monto si tu cliente aplicó otro valor.</div>
+
+        <div class="form-row">
+          <div class="form-group"><label>Ret. Ganancias ($)</label><input type="number" id="f-retGanancias" value="${f?f.retGanancias||0:0}" step="0.01" oninput="recalcNeto()"></div>
+          <div class="form-group"><label>Ret. IVA ($)</label><input type="number" id="f-retIVA" value="${f?f.retIVA||0:0}" step="0.01" oninput="recalcNeto()"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Ret. IIBB ($)</label><input type="number" id="f-retIIBB" value="${f?f.retIIBB||0:0}" step="0.01" oninput="recalcNeto()"></div>
+          <div class="form-group"><label>Neto a cobrar ($)</label><input type="text" id="f-netoCobrar" value="$0" disabled style="background:var(--line-soft);"></div>
+        </div>
+        <button class="btn btn-sm btn-ghost" type="button" onclick="autoRetenciones()" style="width: 100%;">↻ Recalcular retenciones según cliente</button>
+
+        <div class="form-group" style="margin-top: 20px;">
+          <label>Estado</label>
+          <select id="f-estado">
+            <option value="pendiente" ${f && f.estado==='pendiente'?'selected':''}>Pendiente</option>
+            <option value="cobrada" ${f && f.estado==='cobrada'?'selected':''}>Cobrada</option>
+          </select>
+        </div>
+
+        <div class="drawer-actions">
+          <button class="btn" style="flex:1;" onclick="saveFactura('${f?f.id:''}')">Guardar</button>
+          <button class="btn btn-ghost" onclick="closeDrawer()">Cancelar</button>
+        </div>
+      `
+    };
+  },
+
+  gasto(id) {
+    const g = id ? findById(State.gastos, id) : null;
+    const provOpts = State.proveedores.map(p => `<option value="${p.id}" ${g && g.proveedorId===p.id?'selected':''}>${p.razonSocial}</option>`).join('');
+    const catOpts = State.config.categoriasGasto.map(c => `<option value="${c}" ${g && g.categoria===c?'selected':''}>${c}</option>`).join('');
+    return {
+      title: g ? 'Editar gasto' : 'Cargar gasto',
+      html: `
+        <div class="form-row">
+          <div class="form-group"><label>Fecha</label><input type="date" id="f-fecha" value="${g?g.fecha:new Date().toISOString().slice(0,10)}"></div>
+          <div class="form-group"><label>Categoría</label><select id="f-categoria">${catOpts}</select></div>
+        </div>
+        <div class="form-group"><label>Proveedor</label><select id="f-proveedorId">${provOpts}</select></div>
+        <div class="form-group"><label>Concepto</label><input type="text" id="f-concepto" value="${g?g.concepto:''}" placeholder="Gas Oil, Repuestos, etc."></div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>¿Tiene factura?</label>
+            <select id="f-conFactura" onchange="toggleFactura()">
+              <option value="true" ${(!g || g.conFactura)?'selected':''}>Sí (con IVA)</option>
+              <option value="false" ${g && !g.conFactura?'selected':''}>No (sin IVA)</option>
+            </select>
+          </div>
+          <div class="form-group"><label>N° factura</label><input type="text" id="f-numFactura" value="${g?g.numFactura||'':''}" placeholder="001-..."></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Neto ($)</label><input type="number" id="f-neto" value="${g?g.neto:''}" step="0.01" oninput="recalcGasto()"></div>
+          <div class="form-group"><label>IVA ($)</label><input type="number" id="f-iva" value="${g?g.iva:''}" step="0.01" oninput="recalcGasto()"></div>
+        </div>
+        <div class="form-group"><label>Total ($)</label><input type="text" id="f-total" value="${g?fmtARS(g.total):'$0'}" disabled style="background:var(--line-soft);"></div>
+        <div class="info-box">ℹ Calcular IVA ${State.config.ivaPct}%: <button class="btn btn-sm" type="button" onclick="autoIVAGasto()">Auto</button> · <button class="btn btn-sm" type="button" onclick="ivaGasto21()">IVA 21%</button></div>
+        <div class="drawer-actions">
+          <button class="btn" style="flex:1;" onclick="saveGasto('${g?g.id:''}')">Guardar</button>
+          <button class="btn btn-ghost" onclick="closeDrawer()">Cancelar</button>
+        </div>
+      `
+    };
+  },
+
+  cheque(id) {
+    const c = id ? findById(State.cheques, id) : null;
+    const cliOpts = State.clientes.map(cli => `<option value="${cli.id}" ${c && c.endosanteId===cli.id?'selected':''}>${cli.razonSocial}</option>`).join('');
+    return {
+      title: c ? 'Editar cheque' : 'Registrar cheque recibido',
+      html: `
+        <div class="form-group"><label>Cliente / Endosante</label><select id="f-endosanteId">${cliOpts}</select></div>
+        <div class="form-row">
+          <div class="form-group"><label>Emisor</label><input type="text" id="f-emisor" value="${c?c.emisor:''}"></div>
+          <div class="form-group"><label>Banco</label><input type="text" id="f-banco" value="${c?c.banco||'':''}"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>N° cheque</label><input type="text" id="f-numero" value="${c?c.numero:''}"></div>
+          <div class="form-group"><label>Monto</label><input type="number" id="f-monto" value="${c?c.monto:''}" step="0.01"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Fecha de pago</label><input type="date" id="f-fechaPago" value="${c?c.fechaPago:new Date().toISOString().slice(0,10)}"></div>
+          <div class="form-group">
+            <label>Estado</label>
+            <select id="f-estado">
+              <option value="aceptado" ${c && c.estado==='aceptado'?'selected':''}>Aceptado (en cartera)</option>
+              <option value="depositado" ${c && c.estado==='depositado'?'selected':''}>Depositado</option>
+              <option value="endosado" ${c && c.estado==='endosado'?'selected':''}>Endosado</option>
+              <option value="rechazado" ${c && c.estado==='rechazado'?'selected':''}>Rechazado</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group"><label>Destino (si endosado)</label><input type="text" id="f-destino" value="${c?c.destino||'':''}" placeholder="SHELL, CAIMÁN, etc."></div>
+        <div class="drawer-actions">
+          <button class="btn" style="flex:1;" onclick="saveCheque('${c?c.id:''}')">Guardar</button>
+          <button class="btn btn-ghost" onclick="closeDrawer()">Cancelar</button>
+        </div>
+      `
+    };
+  },
+
+  cliente(id) {
+    const c = id ? findById(State.clientes, id) : null;
+    return {
+      title: c ? 'Editar cliente' : 'Nuevo cliente',
+      html: `
+        <div class="form-group"><label>Razón social</label><input type="text" id="f-razonSocial" value="${c?c.razonSocial:''}"></div>
+        <div class="form-group"><label>CUIT</label><input type="text" id="f-cuit" value="${c?c.cuit||'':''}" placeholder="30-XXXXXXXX-X"></div>
+        <div class="form-group"><label>Email</label><input type="email" id="f-email" value="${c?c.email||'':''}"></div>
+        <div class="form-row">
+          <div class="form-group"><label>Ciudad</label><input type="text" id="f-ciudad" value="${c?c.ciudad||'':''}"></div>
+          <div class="form-group"><label>Provincia</label><input type="text" id="f-provincia" value="${c?c.provincia||'':''}"></div>
+        </div>
+
+        <div class="section-title" style="font-size: 16px; margin-top: 20px;">Agente de retención</div>
+        <div class="info-box">ℹ Marcá si el cliente actúa como agente de retención y la alícuota sugerida. Igualmente podés modificar el monto en cada factura.</div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label><input type="checkbox" id="f-agenteGanancias" ${c && c.agenteGanancias ? 'checked' : ''} style="width: auto; margin-right: 6px;"> Ganancias</label>
+            <input type="number" id="f-alicGanancias" value="${c?c.alicGanancias||State.config.retencionGanancias:State.config.retencionGanancias}" step="0.1" placeholder="% alícuota">
+          </div>
+          <div class="form-group">
+            <label><input type="checkbox" id="f-agenteIVA" ${c && c.agenteIVA ? 'checked' : ''} style="width: auto; margin-right: 6px;"> IVA</label>
+            <input type="number" id="f-alicIVA" value="${c?c.alicIVA||State.config.retencionIVA:State.config.retencionIVA}" step="0.1" placeholder="% alícuota">
+          </div>
+        </div>
+        <div class="form-group">
+          <label><input type="checkbox" id="f-agenteIIBB" ${c && c.agenteIIBB ? 'checked' : ''} style="width: auto; margin-right: 6px;"> IIBB</label>
+          <input type="number" id="f-alicIIBB" value="${c?c.alicIIBB||State.config.retencionIIBB:State.config.retencionIIBB}" step="0.1" placeholder="% alícuota">
+        </div>
+
+        <div class="drawer-actions">
+          <button class="btn" style="flex:1;" onclick="saveCliente('${c?c.id:''}')">Guardar</button>
+          <button class="btn btn-ghost" onclick="closeDrawer()">Cancelar</button>
+        </div>
+      `
+    };
+  },
+
+  proveedor(id) {
+    const p = id ? findById(State.proveedores, id) : null;
+    const catOpts = State.config.categoriasGasto.map(c => `<option value="${c}" ${p && p.categoria===c?'selected':''}>${c}</option>`).join('');
+    return {
+      title: p ? 'Editar proveedor' : 'Nuevo proveedor',
+      html: `
+        <div class="form-group"><label>Razón social</label><input type="text" id="f-razonSocial" value="${p?p.razonSocial:''}"></div>
+        <div class="form-group">
+          <label>Categoría</label>
+          <select id="f-categoria" onchange="toggleNuevaCategoria()">
+            ${catOpts}
+            <option value="__nueva__">+ Crear nueva categoría...</option>
+          </select>
+        </div>
+        <div class="form-group" id="nuevaCatGroup" style="display:none;">
+          <label>Nombre de la nueva categoría</label>
+          <input type="text" id="f-nuevaCategoria" placeholder="Ej. Lubricantes">
+        </div>
+        <div class="form-group"><label>CUIT</label><input type="text" id="f-cuit" value="${p?p.cuit||'':''}" placeholder="30-XXXXXXXX-X"></div>
+        <div class="form-row">
+          <div class="form-group"><label>Teléfono</label><input type="text" id="f-tel" value="${p?p.tel||'':''}"></div>
+          <div class="form-group"><label>Email</label><input type="email" id="f-email" value="${p?p.email||'':''}"></div>
+        </div>
+        <div class="form-group"><label>Dirección</label><input type="text" id="f-direccion" value="${p?p.direccion||'':''}"></div>
+        <div class="form-row">
+          <div class="form-group"><label>Ciudad</label><input type="text" id="f-ciudad" value="${p?p.ciudad||'':''}"></div>
+          <div class="form-group"><label>Provincia</label><input type="text" id="f-provincia" value="${p?p.provincia||'':''}"></div>
+        </div>
+        <div class="drawer-actions">
+          <button class="btn" style="flex:1;" onclick="saveProveedor('${p?p.id:''}')">Guardar</button>
+          <button class="btn btn-ghost" onclick="closeDrawer()">Cancelar</button>
+        </div>
+      `
+    };
+  },
+
+  pagoOp(id, opId) {
+    const p = id ? findById(State.pagosOperarios, id) : null;
+    const operarioActual = opId || (p ? p.operarioId : (State.operarios[0] && State.operarios[0].id));
+    const opOpts = State.operarios.map(o => `<option value="${o.id}" ${operarioActual===o.id?'selected':''}>${o.nombre}</option>`).join('');
+    return {
+      title: p ? 'Editar pago' : 'Registrar pago a operario',
+      html: `
+        <div class="form-group">
+          <label>Operario</label>
+          <select id="f-operarioId">${opOpts}</select>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Fecha</label><input type="date" id="f-fecha" value="${p?p.fecha:new Date().toISOString().slice(0,10)}"></div>
+          <div class="form-group"><label>Mes liquidado</label><input type="month" id="f-mes" value="${p?p.mes:new Date().toISOString().slice(0,7)}"></div>
+        </div>
+        <div class="form-group"><label>Monto</label><input type="number" id="f-monto" value="${p?p.monto:''}" step="0.01"></div>
+        <div class="form-group">
+          <label>Origen del pago</label>
+          <select id="f-origen">
+            <option value="${State.config.socioA}" ${p && p.origen===State.config.socioA?'selected':''}>${State.config.socioA}</option>
+            <option value="${State.config.socioB}" ${p && p.origen===State.config.socioB?'selected':''}>${State.config.socioB}</option>
+            <option value="AGRO LA PULVE" ${(!p || p.origen==='AGRO LA PULVE')?'selected':''}>AGRO LA PULVE</option>
+            <option value="BIANCO" ${p && p.origen==='BIANCO'?'selected':''}>BIANCO (legado)</option>
+            <option value="POTETTI" ${p && p.origen==='POTETTI'?'selected':''}>POTETTI (legado)</option>
+          </select>
+        </div>
+        <div class="drawer-actions">
+          <button class="btn" style="flex:1;" onclick="savePagoOp('${p?p.id:''}')">Guardar</button>
+          <button class="btn btn-ghost" onclick="closeDrawer()">Cancelar</button>
+        </div>
+      `
+    };
+  },
+
+  operarioAlta(id) {
+    const o = id ? findById(State.operarios, id) : null;
+    return {
+      title: o ? 'Editar operario' : 'Nuevo operario',
+      html: `
+        <div class="form-group"><label>Nombre</label><input type="text" id="f-nombre" value="${o?o.nombre:''}" placeholder="Ej. Tomi"></div>
+
+        <div class="form-group">
+          <label>Esquema de pago variable</label>
+          <select id="f-esquema" onchange="toggleEsquemaOp()">
+            <option value="has" ${(!o || o.esquema==='has')?'selected':''}>Sueldo fijo + comisión por hectáreas</option>
+            <option value="dias" ${o && o.esquema==='dias'?'selected':''}>Sueldo fijo + monto por día trabajado</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Sueldo fijo mensual ($)</label>
+          <input type="number" id="f-sueldoFijo" value="${o?o.sueldoFijo:0}">
+          <div style="font-size: 11px; color: var(--ink-mute); margin-top: 4px;">Si no tiene sueldo fijo, dejar en 0.</div>
+        </div>
+
+        <div id="esquema-has" style="display: ${(!o || o.esquema==='has')?'block':'none'};">
+          <div class="form-group">
+            <label>Comisión sobre hectáreas (%)</label>
+            <input type="number" step="0.1" id="f-comisionPct" value="${o?o.comisionPct:10}">
+            <div style="font-size: 11px; color: var(--ink-mute); margin-top: 4px;">Se calcula sobre el monto neto (sin IVA) de las hectáreas trabajadas en el mes.</div>
+          </div>
+        </div>
+
+        <div id="esquema-dias" style="display: ${o && o.esquema==='dias'?'block':'none'};">
+          <div class="form-group">
+            <label>Monto por día trabajado ($)</label>
+            <input type="number" id="f-montoPorDia" value="${o?o.montoPorDia:0}">
+            <div style="font-size: 11px; color: var(--ink-mute); margin-top: 4px;">Se multiplica por la cantidad de días trabajados que cargues cada mes.</div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label><input type="checkbox" id="f-activo" ${(!o || o.activo) ? 'checked' : ''} style="width:auto; margin-right:6px;"> Operario activo</label>
+        </div>
+
+        <div class="drawer-actions">
+          <button class="btn" style="flex:1;" onclick="saveOperario('${o?o.id:''}')">Guardar</button>
+          <button class="btn btn-ghost" onclick="closeDrawer()">Cancelar</button>
+        </div>
+      `
+    };
+  },
+
+  diasTrab(id, opId) {
+    const d = id ? findById(State.diasTrabajados, id) : null;
+    const operarioActual = opId || (d ? d.operarioId : null);
+    const op = findById(State.operarios, operarioActual);
+    const montoDia = op ? op.montoPorDia : 0;
+    return {
+      title: d ? 'Editar días trabajados' : `Cargar días trabajados${op ? ' · ' + op.nombre : ''}`,
+      html: `
+        <input type="hidden" id="f-operarioId" value="${operarioActual||''}">
+        <input type="hidden" id="f-montoDia" value="${montoDia}">
+        <div class="form-group">
+          <label>Mes</label>
+          <input type="month" id="f-mes" value="${d?d.mes:new Date().toISOString().slice(0,7)}">
+        </div>
+        <div class="form-group">
+          <label>Cantidad de días trabajados</label>
+          <input type="number" id="f-dias" value="${d?d.dias:''}" min="0" max="31" step="1" oninput="recalcDiasImporte()">
+        </div>
+        ${op ? `
+          <div class="info-box">ℹ Importe estimado: <strong id="diasImporte">${fmtARS(d ? d.dias * montoDia : 0)}</strong> (${fmtARS(montoDia)} × días)</div>
+        ` : ''}
+        <div class="drawer-actions">
+          <button class="btn" style="flex:1;" onclick="saveDiasTrab('${d?d.id:''}')">Guardar</button>
+          <button class="btn btn-ghost" onclick="closeDrawer()">Cancelar</button>
+        </div>
+      `
+    };
+  },
+
+  retiro(id) {
+    const r = id ? findById(State.retirosSocios, id) : null;
+    return {
+      title: r ? 'Editar retiro' : 'Registrar retiro de socio',
+      html: `
+        <div class="form-row">
+          <div class="form-group"><label>Fecha</label><input type="date" id="f-fecha" value="${r?r.fecha:new Date().toISOString().slice(0,10)}"></div>
+          <div class="form-group">
+            <label>Socio</label>
+            <select id="f-socio">
+              <option value="${State.config.socioA}" ${r && r.socio===State.config.socioA?'selected':''}>${State.config.socioA}</option>
+              <option value="${State.config.socioB}" ${r && r.socio===State.config.socioB?'selected':''}>${State.config.socioB}</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group"><label>Monto</label><input type="number" id="f-monto" value="${r?r.monto:''}" step="0.01"></div>
+        <div class="form-group"><label>Origen</label><input type="text" id="f-origen" value="${r?r.origen:'AGRO LA PULVE'}"></div>
+        <div class="drawer-actions">
+          <button class="btn" style="flex:1;" onclick="saveRetiro('${r?r.id:''}')">Guardar</button>
+          <button class="btn btn-ghost" onclick="closeDrawer()">Cancelar</button>
+        </div>
+      `
+    };
+  },
+
+  cuota(id) {
+    const c = id ? findById(State.cuotasMaquina, id) : null;
+    return {
+      title: c ? 'Editar cuota' : 'Agregar cuota máquina',
+      html: `
+        <div class="form-row">
+          <div class="form-group"><label>N° cuota</label><input type="number" id="f-numero" value="${c?c.numero:State.cuotasMaquina.length+1}"></div>
+          <div class="form-group"><label>Vencimiento</label><input type="date" id="f-vencimiento" value="${c?c.vencimiento:''}"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Capital USD</label><input type="number" id="f-capitalUSD" value="${c?c.capitalUSD:9427.5}" step="0.01"></div>
+          <div class="form-group"><label>Financ. USD</label><input type="number" id="f-financUSD" value="${c?c.financUSD:9427.5}" step="0.01"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Total USD</label><input type="number" id="f-totalUSD" value="${c?c.totalUSD:18855}" step="0.01"></div>
+          <div class="form-group"><label>Total ARS pagado</label><input type="number" id="f-totalARS" value="${c?c.totalARS||0:0}" step="0.01"></div>
+        </div>
+        <div class="form-group">
+          <label>Estado</label>
+          <select id="f-estado">
+            <option value="pendiente" ${(!c || c.estado==='pendiente')?'selected':''}>Pendiente</option>
+            <option value="pagada" ${c && c.estado==='pagada'?'selected':''}>Pagada</option>
+          </select>
+        </div>
+        <div class="drawer-actions">
+          <button class="btn" style="flex:1;" onclick="saveCuota('${c?c.id:''}')">Guardar</button>
+          <button class="btn btn-ghost" onclick="closeDrawer()">Cancelar</button>
+        </div>
+      `
+    };
+  },
+
+  precio() {
+    return {
+      title: 'Agregar precio histórico',
+      html: `
+        <div class="form-group"><label>Vigente desde</label><input type="date" id="f-desde" value="${new Date().toISOString().slice(0,10)}"></div>
+        <div class="form-row">
+          <div class="form-group"><label>Precio ARS/ha</label><input type="number" id="f-precioARS" value="${State.config.precioHaActual}"></div>
+          <div class="form-group"><label>Precio USD/ha</label><input type="number" id="f-precioUSD" step="0.01" value="${(State.config.precioHaActual/State.config.tcActual).toFixed(2)}"></div>
+        </div>
+        <div class="info-box">ℹ Al agregar un precio, se actualiza automáticamente el "precio actual" del sistema si es la fecha más reciente.</div>
+        <div class="drawer-actions">
+          <button class="btn" style="flex:1;" onclick="savePrecio()">Guardar</button>
+          <button class="btn btn-ghost" onclick="closeDrawer()">Cancelar</button>
+        </div>
+      `
+    };
+  }
+};
+
+// ============================================================================
+// HANDLERS DE FORMS
+// ============================================================================
+function openForm(type, id, extra) {
+  const f = Forms[type] && Forms[type](id, extra);
+  if (!f) return;
+  document.getElementById('drawerContent').innerHTML = '<h3>'+f.title+'</h3>' + f.html;
+  document.getElementById('drawerBg').classList.add('show');
+}
+
+// helper para cambiar de tab de operario
+function setOpActual(opId) {
+  window._opActual = opId;
+  render();
+}
+
+async function deleteOperario(id) {
+  const op = findById(State.operarios, id);
+  if (!op) return;
+  const tienePagos = State.pagosOperarios.some(p => p.operarioId === id);
+  if (tienePagos) {
+    if (!confirm(`⚠ ${op.nombre} tiene pagos asociados. Si lo borrás, también se borrarán todos sus pagos. ¿Continuar?`)) return;
+    State.pagosOperarios = State.pagosOperarios.filter(p => p.operarioId !== id);
+    State.diasTrabajados = State.diasTrabajados.filter(d => d.operarioId !== id);
+  } else {
+    if (!confirm(`¿Borrar operario ${op.nombre}?`)) return;
+  }
+  State.operarios = State.operarios.filter(o => o.id !== id);
+  window._opActual = null;
+  await saveData();
+  render();
+}
+
+function closeDrawer() {
+  document.getElementById('drawerBg').classList.remove('show');
+}
+
+function val(id) { const el = document.getElementById(id); return el ? el.value : ''; }
+function num(id) { return parseFloat(val(id)) || 0; }
+
+// recalculadores en vivo
+function recalcTrabajo() {
+  const has = num('f-has');
+  const precio = num('f-precioHa');
+  const neto = has * precio;
+  const iva = neto * (State.config.ivaPct / 100);
+  const total = neto + iva;
+  document.getElementById('f-neto').value = fmtARS(neto);
+  document.getElementById('f-iva').value = fmtARS(iva);
+  document.getElementById('f-total').value = fmtARS(total);
+}
+
+function recalcFactura() {
+  const neto = num('f-neto');
+  const iva = num('f-iva');
+  const total = neto + iva;
+  document.getElementById('f-total').value = fmtARS(total);
+  recalcNeto();
+}
+
+function autoIVA() {
+  const neto = num('f-neto');
+  document.getElementById('f-iva').value = (neto * State.config.ivaPct / 100).toFixed(2);
+  recalcFactura();
+}
+
+// recalcula el neto a cobrar (total - retenciones)
+function recalcNeto() {
+  const neto = num('f-neto');
+  const iva = num('f-iva');
+  const total = neto + iva;
+  const retGan = num('f-retGanancias');
+  const retIVA = num('f-retIVA');
+  const retIIBB = num('f-retIIBB');
+  const netoCobrar = total - retGan - retIVA - retIIBB;
+  const el = document.getElementById('f-netoCobrar');
+  if (el) el.value = fmtARS(netoCobrar);
+}
+
+// autollena las retenciones según el cliente seleccionado
+function autoFillRetenciones() {
+  autoRetenciones();
+}
+
+function autoRetenciones() {
+  const cliId = val('f-clienteId');
+  const cli = findById(State.clientes, cliId);
+  if (!cli) return;
+  const neto = num('f-neto');
+  // Las retenciones se aplican típicamente sobre el neto (Ganancias e IIBB) o sobre el IVA (retención IVA)
+  const iva = num('f-iva');
+  const retGan = cli.agenteGanancias ? (neto * (cli.alicGanancias||0) / 100) : 0;
+  const retIVA = cli.agenteIVA ? (iva * (cli.alicIVA||0) / 100) : 0;
+  const retIIBB = cli.agenteIIBB ? (neto * (cli.alicIIBB||0) / 100) : 0;
+  document.getElementById('f-retGanancias').value = retGan.toFixed(2);
+  document.getElementById('f-retIVA').value = retIVA.toFixed(2);
+  document.getElementById('f-retIIBB').value = retIIBB.toFixed(2);
+  recalcNeto();
+}
+
+function recalcGasto() {
+  const neto = num('f-neto');
+  const iva = num('f-iva');
+  document.getElementById('f-total').value = fmtARS(neto + iva);
+}
+
+function autoIVAGasto() {
+  const neto = num('f-neto');
+  document.getElementById('f-iva').value = (neto * State.config.ivaPct / 100).toFixed(2);
+  recalcGasto();
+}
+
+function ivaGasto21() {
+  const neto = num('f-neto');
+  document.getElementById('f-iva').value = (neto * 0.21).toFixed(2);
+  recalcGasto();
+}
+
+function toggleFactura() {
+  const con = val('f-conFactura') === 'true';
+  if (!con) {
+    document.getElementById('f-iva').value = 0;
+    document.getElementById('f-numFactura').value = '';
+    recalcGasto();
+  }
+}
+
+// SAVERS
+// Helper genérico: guarda un item localmente y en el backend
+async function saveEntity(entityKey, stateKey, data) {
+  if (data.id) {
+    const i = State[stateKey].findIndex(x => x.id === data.id);
+    if (i >= 0) State[stateKey][i] = data;
+    else State[stateKey].push(data);
+  } else {
+    data.id = uid(entityKey.slice(0,3));
+    State[stateKey].push(data);
+  }
+  try {
+    await apiSave(entityKey, data);
+    showToast('Guardado');
+    closeDrawer();
+    render();
+  } catch (e) {
+    // si falló el backend, igual mantenemos en memoria pero avisamos
+    closeDrawer();
+    render();
+  }
+}
+
+async function saveTrabajo(id) {
+  const has = num('f-has');
+  const precioHa = num('f-precioHa');
+  const neto = has * precioHa;
+  const iva = neto * (State.config.ivaPct/100);
+  const total = neto + iva;
+  const data = {
+    id: id || null,
+    fecha: val('f-fecha'),
+    clienteId: val('f-clienteId'),
+    has, precioHa, neto, iva, total,
+    facturaId: val('f-facturaId') || '',
+    observaciones: val('f-obs')
+  };
+  await saveEntity('trabajos', 'trabajos', data);
+}
+
+async function saveFactura(id) {
+  const neto = num('f-neto');
+  const iva = num('f-iva');
+  const data = {
+    id: id || null,
+    numero: val('f-numero'),
+    fecha: val('f-fecha'),
+    clienteId: val('f-clienteId'),
+    neto, iva, total: neto + iva,
+    retGanancias: num('f-retGanancias'),
+    retIVA: num('f-retIVA'),
+    retIIBB: num('f-retIIBB'),
+    estado: val('f-estado')
+  };
+  await saveEntity('facturas', 'facturas', data);
+}
+
+async function saveGasto(id) {
+  const neto = num('f-neto');
+  const iva = num('f-iva');
+  const data = {
+    id: id || null,
+    fecha: val('f-fecha'),
+    proveedorId: val('f-proveedorId'),
+    concepto: val('f-concepto'),
+    categoria: val('f-categoria'),
+    neto, iva, total: neto + iva,
+    conFactura: val('f-conFactura') === 'true',
+    numFactura: val('f-numFactura')
+  };
+  await saveEntity('gastos', 'gastos', data);
+}
+
+async function saveCheque(id) {
+  const data = {
+    id: id || null,
+    tipo: 'recibido',
+    endosanteId: val('f-endosanteId'),
+    emisor: val('f-emisor'),
+    banco: val('f-banco'),
+    numero: val('f-numero'),
+    monto: num('f-monto'),
+    fechaPago: val('f-fechaPago'),
+    estado: val('f-estado'),
+    destino: val('f-destino')
+  };
+  await saveEntity('cheques', 'cheques', data);
+}
+
+async function saveCliente(id) {
+  const data = {
+    id: id || null,
+    razonSocial: val('f-razonSocial'),
+    cuit: val('f-cuit'),
+    email: val('f-email'),
+    ciudad: val('f-ciudad'),
+    provincia: val('f-provincia'),
+    agenteGanancias: document.getElementById('f-agenteGanancias').checked,
+    alicGanancias: num('f-alicGanancias'),
+    agenteIVA: document.getElementById('f-agenteIVA').checked,
+    alicIVA: num('f-alicIVA'),
+    agenteIIBB: document.getElementById('f-agenteIIBB').checked,
+    alicIIBB: num('f-alicIIBB')
+  };
+  await saveEntity('clientes', 'clientes', data);
+}
+
+async function saveProveedor(id) {
+  let categoria = val('f-categoria');
+  if (categoria === '__nueva__') {
+    const nueva = val('f-nuevaCategoria').trim();
+    if (!nueva) {
+      showToast('Falta el nombre de la nueva categoría', true);
+      return;
+    }
+    if (!State.config.categoriasGasto.includes(nueva)) {
+      State.config.categoriasGasto.push(nueva);
+      // guardar config actualizada con la nueva categoría
+      apiSaveConfig(State.config).catch(e => console.error(e));
+    }
+    categoria = nueva;
+  }
+  const data = {
+    id: id || null,
+    razonSocial: val('f-razonSocial'),
+    categoria,
+    cuit: val('f-cuit'),
+    tel: val('f-tel'),
+    email: val('f-email'),
+    direccion: val('f-direccion'),
+    ciudad: val('f-ciudad'),
+    provincia: val('f-provincia')
+  };
+  await saveEntity('proveedores', 'proveedores', data);
+}
+
+function toggleNuevaCategoria() {
+  const sel = val('f-categoria');
+  const grp = document.getElementById('nuevaCatGroup');
+  if (grp) grp.style.display = sel === '__nueva__' ? 'block' : 'none';
+}
+
+async function savePagoOp(id) {
+  const data = {
+    id: id || null,
+    operarioId: val('f-operarioId'),
+    fecha: val('f-fecha'),
+    mes: val('f-mes'),
+    monto: num('f-monto'),
+    origen: val('f-origen')
+  };
+  await saveEntity('pagosOperarios', 'pagosOperarios', data);
+}
+
+async function saveOperario(id) {
+  const data = {
+    id: id || null,
+    nombre: val('f-nombre'),
+    esquema: val('f-esquema'),
+    sueldoFijo: num('f-sueldoFijo'),
+    comisionPct: num('f-comisionPct'),
+    montoPorDia: num('f-montoPorDia'),
+    activo: document.getElementById('f-activo').checked
+  };
+  const wasNew = !id;
+  await saveEntity('operarios', 'operarios', data);
+  if (wasNew) window._opActual = data.id;
+}
+
+async function saveDiasTrab(id) {
+  const operarioId = val('f-operarioId');
+  const mes = val('f-mes');
+  const dias = parseInt(val('f-dias')) || 0;
+  // si ya hay un registro para este operario+mes, actualizar
+  if (!id) {
+    const ya = State.diasTrabajados.find(d => d.operarioId === operarioId && d.mes === mes);
+    if (ya) {
+      const updated = { ...ya, dias };
+      await saveEntity('diasTrabajados', 'diasTrabajados', updated);
+      return;
+    }
+  }
+  const data = { id: id || null, operarioId, mes, dias };
+  await saveEntity('diasTrabajados', 'diasTrabajados', data);
+}
+
+function toggleEsquemaOp() {
+  const esq = val('f-esquema');
+  document.getElementById('esquema-has').style.display = esq === 'has' ? 'block' : 'none';
+  document.getElementById('esquema-dias').style.display = esq === 'dias' ? 'block' : 'none';
+}
+
+function recalcDiasImporte() {
+  const dias = parseFloat(val('f-dias')) || 0;
+  const monto = parseFloat(val('f-montoDia')) || 0;
+  const lab = document.getElementById('diasImporte');
+  if (lab) lab.textContent = '$' + Math.round(dias * monto).toLocaleString('es-AR');
+}
+
+async function saveRetiro(id) {
+  const data = {
+    id: id || null,
+    fecha: val('f-fecha'),
+    socio: val('f-socio'),
+    monto: num('f-monto'),
+    origen: val('f-origen')
+  };
+  await saveEntity('retirosSocios', 'retirosSocios', data);
+}
+
+async function saveCuota(id) {
+  const data = {
+    id: id || null,
+    numero: parseInt(val('f-numero')),
+    vencimiento: val('f-vencimiento'),
+    capitalUSD: num('f-capitalUSD'),
+    financUSD: num('f-financUSD'),
+    totalUSD: num('f-totalUSD'),
+    totalARS: num('f-totalARS'),
+    estado: val('f-estado')
+  };
+  await saveEntity('cuotasMaquina', 'cuotasMaquina', data);
+}
+
+async function savePrecio() {
+  const data = {
+    id: null,
+    desde: val('f-desde'),
+    precioARS: num('f-precioARS'),
+    precioUSD: num('f-precioUSD')
+  };
+  await saveEntity('preciosHistorico', 'preciosHistorico', data);
+  // actualizar el precio actual del config si es la fecha más reciente
+  const ord = [...State.preciosHistorico].sort((a,b) => b.desde.localeCompare(a.desde));
+  if (ord[0]) {
+    State.config.precioHaActual = ord[0].precioARS;
+    apiSaveConfig(State.config).catch(e => console.error(e));
+  }
+}
+
+async function saveConfig() {
+  State.config.sociedadNombre = val('cfg-sociedadNombre');
+  State.config.socioA = val('cfg-socioA');
+  State.config.socioB = val('cfg-socioB');
+  State.config.pctA = num('cfg-pctA');
+  State.config.pctB = num('cfg-pctB');
+  State.config.cuit = val('cfg-cuit');
+  State.config.inicioEjercicio = val('cfg-inicioEjercicio');
+  State.config.tcActual = num('cfg-tcActual');
+  State.config.precioHaActual = num('cfg-precioHaActual');
+  State.config.ivaPct = num('cfg-ivaPct');
+  State.config.retencionGanancias = num('cfg-retencionGanancias');
+  State.config.retencionIVA = num('cfg-retencionIVA');
+  State.config.retencionIIBB = num('cfg-retencionIIBB');
+  try {
+    await apiSaveConfig(State.config);
+    showToast('Configuración guardada');
+  } catch (e) { /* error ya mostrado */ }
+  render();
+}
+
+async function deleteItem(collection, id) {
+  if (!confirm('¿Borrar este registro? Esta acción no se puede deshacer.')) return;
+  // sacar del estado local
+  State[collection] = State[collection].filter(x => x.id !== id);
+  // borrar en backend
+  try {
+    await apiDelete(collection, id);
+    showToast('Borrado');
+  } catch(e) { /* error ya mostrado */ }
+  render();
+}
+
+function exportData() {
+  const blob = new Blob([JSON.stringify(State, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'lapulve-' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('Exportado');
+}
+
+async function refreshFromBackend() {
+  showToast('Sincronizando...');
+  await loadData();
+  render();
+  showToast('Datos actualizados');
+}
+
+async function confirmReset() {
+  alert('Para resetear la app, abrí el Google Sheet y borrá el contenido de las hojas (o ejecutá la función resetTodo() en el editor de Apps Script).');
+}
+
+// ============================================================================
+// ROUTING / RENDER
+// ============================================================================
+let currentPage = 'dashboard';
+
+function goTo(page) {
+  currentPage = page;
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.page === page));
+  const labels = { dashboard:'Dashboard', trabajos:'Ingresos', facturacion:'Facturación', gastos:'Gastos', cheques:'Cheques y Transferencias', financiacion:'Financiación máquina', clientes:'Clientes', proveedores:'Proveedores', operario:'Operario', socios:'Socios', reportes:'Reportes', config:'Configuración' };
+  document.getElementById('bc').textContent = labels[page] || page;
+  render();
+  document.querySelector('.main').scrollTo(0, 0);
+}
+
+function render() {
+  document.getElementById('pageContainer').innerHTML = Pages[currentPage] ? Pages[currentPage]() : '<p>Página no encontrada</p>';
+  // refrescar header
+  document.getElementById('tcDisplay').textContent = '$' + State.config.tcActual.toLocaleString('es-AR');
+  document.getElementById('brandTag').textContent = `Gestión · Soc. ${State.config.socioA}-${State.config.socioB}`;
+  document.getElementById('userName').textContent = State.config.socioA;
+  document.getElementById('userAvatar').textContent = State.config.socioA[0];
+  document.getElementById('userRole').textContent = `Socio · ${State.config.pctA.toFixed(2)}%`;
+}
+
+// ============================================================================
+// INIT
+// ============================================================================
+async function init() {
+  const result = await loadData();
+  if (!result.ok) {
+    showErrorScreen(result.error);
+    return;
+  }
+
+  // Si el backend devolvió datos pero están vacíos, ofrecer seed
+  const tieneAlgo = State.clientes.length > 0 || State.trabajos.length > 0 || State.facturas.length > 0;
+  if (!tieneAlgo && State.operarios.length === 0) {
+    if (confirm('La base de datos está vacía. ¿Querés cargar los datos iniciales de ejemplo?\n\n(Podés hacer esto también desde el editor de Apps Script ejecutando la función seedInicial().)')) {
+      try {
+        showToast('Cargando datos iniciales...');
+        await apiPost({ action: 'seed' });
+        await loadData();
+      } catch(e) {
+        showToast('Error al cargar seed: ' + e.message, true);
+      }
+    }
+  }
+
+  showApp();
+}
+
+function showApp() {
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('migration').style.display = 'none';
+  document.getElementById('appRoot').style.display = 'grid';
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.removeEventListener('click', navHandler);
+    item.addEventListener('click', navHandler);
+  });
+  render();
+}
+
+function navHandler(e) {
+  goTo(e.currentTarget.dataset.page);
+}
+
+function showConfigScreen() {
+  document.getElementById('loading').style.display = 'none';
+  const mig = document.getElementById('migration');
+  mig.innerHTML = `
+    <div class="mig-card">
+      <div class="brand-name display" style="color: var(--accent); font-size: 28px;">La Pulve</div>
+      <div style="font-size: 11px; color: var(--ink-mute); text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 24px;">Configuración inicial requerida</div>
+
+      <h2 style="font-family: 'Fraunces', serif; font-weight: 600; margin-bottom: 12px;">Falta conectar el backend</h2>
+      <p style="color: var(--ink-soft); margin-bottom: 16px; line-height: 1.6;">
+        Esta app necesita conectarse a tu Google Apps Script. Editá el archivo <strong>index.html</strong> y pegá la URL de tu despliegue en la constante <code style="background: var(--line-soft); padding: 2px 6px; border-radius: 4px;">BACKEND_URL</code> (línea 280 aproximadamente).
+      </p>
+      <div class="info-box">
+        <strong>¿Cómo obtener la URL?</strong><br>
+        En Apps Script: Implementar → Aplicación web → Copiar la URL del despliegue.<br>
+        Tiene este formato: <code style="font-size: 11px;">https://script.google.com/macros/s/AKfycbxxx.../exec</code>
+      </div>
+      <p style="font-size: 12px; color: var(--ink-mute); margin-top: 20px; text-align: center;">
+        Una vez configurado, recargá esta página.
+      </p>
+    </div>
+  `;
+  mig.style.display = 'flex';
+}
+
+function showErrorScreen(error) {
+  document.getElementById('loading').style.display = 'none';
+  const mig = document.getElementById('migration');
+  mig.innerHTML = `
+    <div class="mig-card">
+      <div class="brand-name display" style="color: var(--rust); font-size: 28px;">La Pulve</div>
+      <div style="font-size: 11px; color: var(--ink-mute); text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 24px;">Error de conexión</div>
+
+      <h2 style="font-family: 'Fraunces', serif; font-weight: 600; margin-bottom: 12px;">No se pudo conectar al backend</h2>
+      <p style="color: var(--ink-soft); margin-bottom: 16px;">${error}</p>
+      <div class="info-box">
+        <strong>Posibles causas:</strong>
+        <ul style="margin: 8px 0 0 20px; line-height: 1.8;">
+          <li>La URL del Apps Script no es correcta</li>
+          <li>El despliegue no está configurado como "Cualquier persona con cuenta de Google"</li>
+          <li>Tu email no está en la lista de usuarios autorizados (revisar USUARIOS_AUTORIZADOS en Apps Script)</li>
+          <li>No tenés conexión a internet</li>
+        </ul>
+      </div>
+      <button class="btn" style="margin-top: 16px; width: 100%;" onclick="location.reload()">Reintentar</button>
+    </div>
+  `;
+  mig.style.display = 'flex';
+}
+
+init();
+</script>
+</body>
+</html>
